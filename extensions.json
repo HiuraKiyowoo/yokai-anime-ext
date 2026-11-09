@@ -40,8 +40,8 @@
     "module": "animelovers",
     "pkg": "eu.kanade.tachiyomi.extension.id.animelovers",
     "lang": "id",
-    "code": 1,
-    "version": "1.4.0",
+    "code": 2,
+    "version": "1.4.1",
     "nsfw": 0,
     "sumber": "API lama apps.animekita.org/api/v1.2.5 (tanpa enkripsi)",
     "sources": [
