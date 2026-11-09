@@ -15,6 +15,9 @@ dependencyResolutionManagement {
     repositories {
         mavenCentral()
         google()
+        // Pustaka Yokai (injekt-koin, unifile) hanya ada di JitPack
+        maven("https://jitpack.io")
+        maven("https://s01.oss.sonatype.org/content/repositories/releases/")
     }
 }
 
