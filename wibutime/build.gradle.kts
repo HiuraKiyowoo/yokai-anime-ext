@@ -14,7 +14,9 @@ plugins {
  * tidak ekstensi tidak akan dipercaya otomatis. Kalau tidak ada, jatuh ke
  * keystore debug supaya build lokal tetap bisa jalan.
  */
-val berkasKeystore = System.getenv("KEYSTORE_FILE")?.takeIf { file(it).exists() }
+val berkasKeystore: File? = System.getenv("KEYSTORE_FILE")
+    ?.let { File(it) }
+    ?.takeIf { it.exists() }
 
 android {
     namespace = "eu.kanade.tachiyomi.extension.id.wibutime"
