@@ -1,0 +1,12 @@
+[
+  {
+    "name": "Wibutime",
+    "module": "wibutime",
+    "pkg": "eu.kanade.tachiyomi.extension.id.wibutime",
+    "lang": "id",
+    "code": 1,
+    "version": "1.5.0",
+    "nsfw": 0,
+    "sumber": "Backend Supabase aplikasi Wibutime (katalog, episode, tautan video)"
+  }
+]

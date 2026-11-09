@@ -1,0 +1,91 @@
+name: build-ext
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      # Pustaka antarmuka sumber diambil dari repo aplikasi, dipatok ke satu
+      # commit supaya build tidak berubah diam-diam saat aplikasi diperbarui.
+      - name: Ambil pustaka API dari repo Yokai
+        uses: actions/checkout@v4
+        with:
+          repository: HiuraKiyowoo/yokai
+          ref: 87fadbc62a03e5d156c5fd8331f461737af27dff
+          path: yokai
+
+      - name: Setup Android SDK
+        run: |
+          SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDK" --licenses > /dev/null 2>&1 || true
+          "$SDK" "build-tools;35.0.0"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setelan Gradle untuk CI
+        run: |
+          mkdir -p ~/.gradle
+          printf 'org.gradle.daemon=false\norg.gradle.jvmargs=-Xmx5120m\norg.gradle.workers.max=2\nkotlin.incremental=false\n' > ~/.gradle/gradle.properties
+
+      - name: Build ekstensi
+        run: |
+          set -o pipefail
+          ./gradlew :wibutime:assembleRelease --no-daemon --stacktrace --console=plain 2>&1 | tee build.log
+
+      - name: Ringkas galat
+        if: always()
+        run: |
+          {
+            echo "===== awal ====="; head -40 build.log 2>/dev/null
+            echo "===== What went wrong ====="; grep -A 25 "What went wrong" build.log 2>/dev/null
+            echo "===== error ====="; grep -nE "^e: |error:|Cannot|Unresolved|FAILURE|Could not" build.log 2>/dev/null | head -40
+          } > err.txt 2>&1 || true
+
+      - name: Unggah galat
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: err
+          path: err.txt
+
+      - name: Buat index.min.json
+        if: success()
+        run: python3 scripts/buat_index.py
+
+      - name: Rilis APK
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          while read -r M V; do
+            TAG="v$V"
+            gh release view "$TAG" > /dev/null 2>&1 || gh release create "$TAG" --title "$M $V" --notes "Ekstensi anime untuk Yokai."
+            gh release upload "$TAG" "$M/build/outputs/apk/release/"*.apk --clobber
+          done < <(python3 -c "import json;[print(e['module'], e['version']) for e in json.load(open('extensions.json'))]")
+
+      - name: Simpan indeks ke repo
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.min.json
+          git commit -m "chore: perbarui index.min.json [skip ci]" || echo "tidak ada perubahan"
+          git push
+
+      - name: Unggah APK
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: '*/build/outputs/apk/release/*.apk'
+          if-no-files-found: warn

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Wajib: tanpa ini aplikasi tidak menganggap paket ini sebagai ekstensi -->
+    <uses-feature
+        android:name="tachiyomi.extension"
+        android:required="false" />
+
+    <application
+        android:label="Wibutime"
+        android:hasCode="true">
+
+        <meta-data
+            android:name="tachiyomix.name"
+            android:value="Wibutime" />
+        <!-- Harus 1.3 - 1.6 agar diterima ExtensionLoader -->
+        <meta-data
+            android:name="tachiyomix.extensionLib"
+            android:value="1.5" />
+        <meta-data
+            android:name="tachiyomix.contentWarning"
+            android:value="" />
+        <meta-data
+            android:name="tachiyomi.extension.factory"
+            android:value="eu.kanade.tachiyomi.extension.id.wibutime.WibutimeFactory" />
+        <meta-data
+            android:name="tachiyomi.extension.nsfw"
+            android:value="false" />
+        <meta-data
+            android:name="tachiyomi.extension.hasReadme"
+            android:value="false" />
+        <meta-data
+            android:name="tachiyomi.extension.hasChangelog"
+            android:value="false" />
+    </application>
+
+</manifest>
