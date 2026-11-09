@@ -100,11 +100,23 @@ class Wibutime : HttpSource() {
 
     // --- Katalog ------------------------------------------------------------
 
+    /**
+     * Populer: urut rating tertinggi.
+     *
+     * Tabel `animes` tidak punya kolom jumlah tayangan; `views` hanya ada di RPC
+     * get_trending_series yang berhenti di 10 besar dan tidak berpaginasi. Jadi
+     * rating dipakai sebagai proksi popularitas supaya tetap bisa berhalaman.
+     */
     override fun fetchPopularManga(page: Int): Observable<MangasPage> = Observable
-        .fromCallable { daftar(berhalaman("animes?select=$KOLOM&order=latest_episode_created_at.desc.nullslast", page)) }
+        .fromCallable { daftar(berhalaman("animes?select=$KOLOM&order=rating.desc.nullslast", page)) }
         .subscribeOn(Schedulers.io())
 
-    override fun fetchLatestUpdates(page: Int): Observable<MangasPage> = fetchPopularManga(page)
+    /** Terbaru: yang paling baru merilis episode. */
+    override fun fetchLatestUpdates(page: Int): Observable<MangasPage> = Observable
+        .fromCallable {
+            daftar(berhalaman("animes?select=$KOLOM&order=latest_episode_created_at.desc.nullslast", page))
+        }
+        .subscribeOn(Schedulers.io())
 
     override fun fetchSearchManga(page: Int, query: String, filters: FilterList): Observable<MangasPage> = Observable
         .fromCallable {

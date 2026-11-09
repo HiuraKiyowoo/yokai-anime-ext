@@ -8,6 +8,7 @@
 
     <application
         android:label="Wibutime"
+        android:icon="@mipmap/ic_launcher"
         android:hasCode="true">
 
         <meta-data

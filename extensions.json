@@ -4,8 +4,8 @@
     "module": "wibutime",
     "pkg": "eu.kanade.tachiyomi.extension.id.wibutime",
     "lang": "id",
-    "code": 5,
-    "version": "1.5.4",
+    "code": 6,
+    "version": "1.5.5",
     "nsfw": 0,
     "sumber": "Backend Supabase aplikasi Wibutime (katalog, episode, tautan video)",
     "sources": [
