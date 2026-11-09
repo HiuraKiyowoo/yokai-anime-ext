@@ -37,10 +37,27 @@ jobs:
           mkdir -p ~/.gradle
           printf 'org.gradle.daemon=false\norg.gradle.jvmargs=-Xmx5120m\norg.gradle.workers.max=2\nkotlin.incremental=false\n' > ~/.gradle/gradle.properties
 
+      # Keystore tetap: sidik jarinya harus sama dengan signingKeyFingerprint di
+      # repo.json, kalau tidak aplikasi menolak mempercayai ekstensi otomatis.
       - name: Build ekstensi
+        env:
+          KEYSTORE_FILE: ${{ runner.temp }}/yokai-ext.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           set -o pipefail
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > "$KEYSTORE_FILE"
           ./gradlew :wibutime:assembleRelease --no-daemon --stacktrace --console=plain 2>&1 | tee build.log
+
+      # Bukti bahwa APK ditandatangani kunci yang benar, bukan keystore debug.
+      - name: Periksa sidik jari APK
+        if: success()
+        run: |
+          APK=$(ls wibutime/build/outputs/apk/release/*.apk | head -1)
+          echo "APK: $APK"
+          KS="$ANDROID_SDK_ROOT/build-tools/35.0.0"
+          "$KS/apksigner" verify --print-certs "$APK" | tee sidik.txt
 
       - name: Ringkas galat
         if: always()
@@ -56,7 +73,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: err
-          path: err.txt
+          path: |
+            err.txt
+            sidik.txt
 
       - name: Buat index.min.json
         if: success()

@@ -6,6 +6,16 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization")
 }
 
+/**
+ * Penanda tangan.
+ *
+ * Kalau CI menyediakan keystore lewat env (KEYSTORE_FILE + sandi), pakai itu —
+ * sidik jarinya harus sama dengan `signingKeyFingerprint` di repo.json, kalau
+ * tidak ekstensi tidak akan dipercaya otomatis. Kalau tidak ada, jatuh ke
+ * keystore debug supaya build lokal tetap bisa jalan.
+ */
+val berkasKeystore = System.getenv("KEYSTORE_FILE")?.takeIf { file(it).exists() }
+
 android {
     namespace = "eu.kanade.tachiyomi.extension.id.wibutime"
     compileSdk = 36
@@ -14,8 +24,19 @@ android {
         applicationId = "eu.kanade.tachiyomi.extension.id.wibutime"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.5.0"
+        versionCode = 2
+        versionName = "1.5.1"
+    }
+
+    signingConfigs {
+        if (berkasKeystore != null) {
+            create("rilis") {
+                storeFile = berkasKeystore
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD")
+            }
+        }
     }
 
     compileOptions {
@@ -27,9 +48,11 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            // Ekstensi harus bertanda tangan supaya bisa di-trust aplikasi.
-            // Keystore debug selalu ada; tidak perlu menyimpan kunci di repo.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (berkasKeystore != null) {
+                signingConfigs.getByName("rilis")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }

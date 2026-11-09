@@ -11,6 +11,10 @@ Di Yokai: **Browse → Extension Repo → tambah URL**
 https://raw.githubusercontent.com/HiuraKiyowoo/yokai-anime-ext/main
 ```
 
+Aplikasi meminta `<base>/repo.json` dulu (metadata + `signingKeyFingerprint`),
+lalu membaca `index.min.json`. Tanpa `repo.json` yang sah, aplikasi menolak
+dengan pesan **"URL repo tidak valid"** — itu bukan soal jaringan.
+
 Aplikasi akan menambah `/index.min.json` sendiri. Semua ekstensi di repo ini
 lalu muncul dan bisa dipasang/di-update dari dalam aplikasi.
 
@@ -53,3 +57,17 @@ Tiap ekstensi wajib punya di manifest:
 
 `tachiyomix.extensionLib` harus di antara 1.3 dan 1.6, kalau tidak aplikasi
 menolak memuatnya.
+
+## Penandatanganan
+
+Keystore tetap disimpan sebagai secret repo (`KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`,
+`KEY_ALIAS`, `KEY_PASSWORD`). Sidik jari SHA-256 sertifikatnya ditulis di
+`repo.json` → `meta.signingKeyFingerprint`.
+
+Kalau keystore diganti, `repo.json` **wajib** diperbarui, kalau tidak ekstensi
+akan berstatus untrusted dan harus di-trust manual setiap update:
+
+```bash
+keytool -exportcert -keystore keystore.jks -alias <alias> -file cert.der
+python3 -c "import hashlib;print(hashlib.sha256(open('cert.der','rb').read()).hexdigest())"
+```
