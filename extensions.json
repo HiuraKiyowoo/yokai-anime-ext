@@ -34,5 +34,23 @@
         "baseUrl": "https://xyz-api.animein.net"
       }
     ]
+  },
+  {
+    "name": "AnimeLovers",
+    "module": "animelovers",
+    "pkg": "eu.kanade.tachiyomi.extension.id.animelovers",
+    "lang": "id",
+    "code": 1,
+    "version": "1.4.0",
+    "nsfw": 0,
+    "sumber": "API lama apps.animekita.org/api/v1.2.5 (tanpa enkripsi)",
+    "sources": [
+      {
+        "name": "AnimeLovers",
+        "id": 1,
+        "lang": "id",
+        "baseUrl": "https://animekita.org"
+      }
+    ]
   }
 ]

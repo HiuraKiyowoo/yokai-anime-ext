@@ -25,6 +25,7 @@ rootProject.name = "yokai-anime-ext"
 
 include(":wibutime")
 include(":animein")
+include(":animelovers")
 
 /*
  * Pustaka antarmuka sumber (eu.kanade.tachiyomi.source.*) tidak diterbitkan ke
