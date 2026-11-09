@@ -7,6 +7,14 @@
     "code": 2,
     "version": "1.5.1",
     "nsfw": 0,
-    "sumber": "Backend Supabase aplikasi Wibutime (katalog, episode, tautan video)"
+    "sumber": "Backend Supabase aplikasi Wibutime (katalog, episode, tautan video)",
+    "sources": [
+      {
+        "name": "Wibutime",
+        "id": 1,
+        "lang": "id",
+        "baseUrl": "https://paivcxbhxyytczbpyzla.supabase.co"
+      }
+    ]
   }
 ]

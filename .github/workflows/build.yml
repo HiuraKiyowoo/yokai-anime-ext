@@ -92,13 +92,20 @@ jobs:
             gh release upload "$TAG" "$M/build/outputs/apk/release/"*.apk --clobber
           done < <(python3 -c "import json;[print(e['module'], e['version']) for e in json.load(open('extensions.json'))]")
 
-      - name: Simpan indeks ke repo
+      # Aplikasi menyusun URL unduhan sendiri: <base>/apk/<nama apk>.
+      # Jadi APK-nya harus benar-benar ada di folder apk/ dalam repo ini.
+      - name: Simpan indeks + APK ke repo
         if: success()
         run: |
+          mkdir -p apk
+          for M in $(python3 -c "import json;[print(e['module']) for e in json.load(open('extensions.json'))]"); do
+            cp "$M/build/outputs/apk/release/"*.apk "apk/$M-release.apk"
+          done
+          ls -lh apk/
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.min.json
-          git commit -m "chore: perbarui index.min.json [skip ci]" || echo "tidak ada perubahan"
+          git add index.min.json apk
+          git commit -m "chore: perbarui index.min.json + APK [skip ci]" || echo "tidak ada perubahan"
           git push
 
       - name: Unggah APK
