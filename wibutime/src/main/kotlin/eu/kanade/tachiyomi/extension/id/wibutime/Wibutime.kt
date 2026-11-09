@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.extension.id.wibutime
 
+import eu.kanade.tachiyomi.source.model.Filter
 import eu.kanade.tachiyomi.source.model.FilterList
 import eu.kanade.tachiyomi.source.model.MangasPage
 import eu.kanade.tachiyomi.source.model.Page
@@ -34,6 +35,14 @@ private const val KUNCI_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ
 private const val KOLOM = "slug,title,synopsis,poster_url,genres,type,status,rating,year," +
     "studio,latest_episode_number,total_episodes"
 private const val PER_HALAMAN = 30
+
+/** Genre yang benar-benar dipakai katalog Wibutime (case-sensitive). */
+private val GENRE = arrayOf(
+    "Action", "Adventure", "Comedy", "Drama", "Ecchi", "Fantasy", "Harem", "Horror",
+    "Isekai", "Mecha", "Military", "Music", "Mystery", "Psychological", "Romance",
+    "School", "Sci-Fi", "Seinen", "Shounen", "Slice of Life", "Sports", "Supernatural",
+    "Thriller", "OVA", "Movie", "Donghua",
+)
 
 class Wibutime : HttpSource() {
 
@@ -118,16 +127,34 @@ class Wibutime : HttpSource() {
         }
         .subscribeOn(Schedulers.io())
 
+    // --- Filter -------------------------------------------------------------
+
+    private class GenreFilter(opsi: Array<String>) : Filter.Select<String>("Genre", opsi)
+    private class UrutFilter(opsi: Array<String>) : Filter.Select<String>("Urutan", opsi)
+
+    override fun getFilterList(): FilterList = FilterList(
+        GenreFilter(arrayOf("Semua") + GENRE),
+        UrutFilter(arrayOf("Terbaru", "Rating tertinggi")),
+    )
+
     override fun fetchSearchManga(page: Int, query: String, filters: FilterList): Observable<MangasPage> = Observable
         .fromCallable {
             val bersih = query.replace(Regex("[*,()]"), " ").trim()
-            val path = if (bersih.isEmpty()) {
-                "animes?select=$KOLOM&order=latest_episode_created_at.desc.nullslast"
+            val genre = (filters.find { it is GenreFilter } as? GenreFilter)
+                ?.takeIf { it.state > 0 }
+                ?.let { it.values[it.state] }
+            val urut = (filters.find { it is UrutFilter } as? UrutFilter)?.state ?: 0
+            val urutan = if (urut == 1) "rating.desc.nullslast" else "latest_episode_created_at.desc.nullslast"
+
+            val dasar = if (bersih.isEmpty()) {
+                "animes?select=$KOLOM"
             } else {
                 // alt_titles bertipe array -> ilike ditolak server (42883); hanya kolom teks
                 "animes?select=$KOLOM&or=(title.ilike.*$bersih*,synopsis.ilike.*$bersih*)"
             }
-            daftar(berhalaman(path, page))
+            // genre bertipe array -> operator `cs` (contains)
+            val saring = genre?.let { "&genres=cs.{$it}" } ?: ""
+            daftar(berhalaman("$dasar$saring&order=$urutan", page))
         }
         .subscribeOn(Schedulers.io())
 

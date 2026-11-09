@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.extension.id.animein
 
+import eu.kanade.tachiyomi.source.model.Filter
 import eu.kanade.tachiyomi.source.model.FilterList
 import eu.kanade.tachiyomi.source.model.MangasPage
 import eu.kanade.tachiyomi.source.model.Page
@@ -37,6 +38,14 @@ private const val UA = "Mozilla/5.0 (Linux; Android 14; Infinix X6833B) AppleWeb
 
 /** Batas halaman episode yang diambil (30 per halaman). */
 private const val HALAMAN_EPISODE_MAKS = 5
+
+/** Genre di AnimeIn berupa string dipisah koma. */
+private val GENRE = arrayOf(
+    "Action", "Adventure", "Comedy", "Drama", "Ecchi", "Fantasy", "Harem", "Horror",
+    "Isekai", "Mecha", "Military", "Music", "Mystery", "Psychological", "Romance",
+    "School", "Sci-Fi", "Seinen", "Shounen", "Slice of Life", "Sports", "Supernatural",
+    "Thriller",
+)
 
 class Animein : HttpSource() {
 
@@ -102,11 +111,18 @@ class Animein : HttpSource() {
         initialized = true
     }
 
-    private fun halamanManga(page: Int, sort: String?, kataKunci: String?): MangasPage {
+    private class GenreFilter(opsi: Array<String>) : Filter.Select<String>("Genre", opsi)
+
+    override fun getFilterList(): FilterList = FilterList(
+        GenreFilter(arrayOf("Semua") + GENRE),
+    )
+
+    private fun halamanManga(page: Int, sort: String?, kataKunci: String?, genre: String? = null): MangasPage {
         val q = buildString {
             append("/3/2/explore/movie?page=").append(page - 1)
             sort?.let { append("&sort=").append(it) }
             kataKunci?.takeIf { it.isNotBlank() }?.let { append("&keyword=").append(it) }
+            genre?.let { append("&genre_in=").append(it) }
         }
         val baris = data(q).daftar("movie")
         return MangasPage(baris.map { keManga(it.jsonObject) }, baris.size >= 60)
@@ -123,7 +139,12 @@ class Animein : HttpSource() {
     override fun fetchLatestUpdates(page: Int): Observable<MangasPage> = fetchPopularManga(page)
 
     override fun fetchSearchManga(page: Int, query: String, filters: FilterList): Observable<MangasPage> = Observable
-        .fromCallable { halamanManga(page, null, query.trim()) }
+        .fromCallable {
+            val genre = (filters.find { it is GenreFilter } as? GenreFilter)
+                ?.takeIf { it.state > 0 }
+                ?.let { it.values[it.state] }
+            halamanManga(page, null, query.trim(), genre)
+        }
         .subscribeOn(Schedulers.io())
 
     // --- Detail & episode ---------------------------------------------------
