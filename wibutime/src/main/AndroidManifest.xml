@@ -20,6 +20,14 @@
         <meta-data
             android:name="tachiyomix.contentWarning"
             android:value="" />
+        <!-- WAJIB ada. ExtensionLoader memanggil
+             metaData.getString("tachiyomi.extension.class")!! tanpa pemeriksaan
+             null; kalau kosong, seluruh aplikasi force close saat start
+             (SourceManager -> ExtensionManager -> NPE). Nilainya boleh kelas
+             Source maupun SourceFactory — loader menangani keduanya. -->
+        <meta-data
+            android:name="tachiyomi.extension.class"
+            android:value="eu.kanade.tachiyomi.extension.id.wibutime.WibutimeFactory" />
         <meta-data
             android:name="tachiyomi.extension.factory"
             android:value="eu.kanade.tachiyomi.extension.id.wibutime.WibutimeFactory" />
