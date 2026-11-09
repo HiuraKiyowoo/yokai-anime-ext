@@ -54,6 +54,10 @@ class Animein : HttpSource() {
     // juga dipakai saat mengunduh poster, dan host gambar akan menolaknya.
     override fun headersBuilder() = super.headersBuilder()
         .add("User-Agent", UA)
+        // Wajib: host gambar AnimeIn membalas 403 untuk GET tanpa Referer,
+        // sementara HEAD dibiarkan 200 — makanya kelihatan "hidup" padahal
+        // poster gagal dimuat. Header ini juga ikut dipakai MangaCoverFetcher.
+        .add("Referer", "https://animein.net/")
         .add("Accept", "application/json")
 
     // --- HTTP kecil ---------------------------------------------------------
