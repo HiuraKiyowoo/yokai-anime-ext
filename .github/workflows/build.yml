@@ -39,7 +39,7 @@ jobs:
 
       # Keystore tetap: sidik jarinya harus sama dengan signingKeyFingerprint di
       # repo.json, kalau tidak aplikasi menolak mempercayai ekstensi otomatis.
-      - name: Build ekstensi
+      - name: Build semua ekstensi
         env:
           KEYSTORE_FILE: ${{ runner.temp }}/yokai-ext.jks
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -48,16 +48,20 @@ jobs:
         run: |
           set -o pipefail
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > "$KEYSTORE_FILE"
-          ./gradlew :wibutime:assembleRelease --no-daemon --stacktrace --console=plain 2>&1 | tee build.log
+          MODUL=$(python3 -c "import json;print(' '.join(':'+e['module']+':assembleRelease' for e in json.load(open('extensions.json'))))")
+          echo "modul: $MODUL"
+          ./gradlew $MODUL --no-daemon --stacktrace --console=plain 2>&1 | tee build.log
 
       # Bukti bahwa APK ditandatangani kunci yang benar, bukan keystore debug.
       - name: Periksa sidik jari APK
         if: success()
         run: |
-          APK=$(ls wibutime/build/outputs/apk/release/*.apk | head -1)
-          echo "APK: $APK"
           KS="$ANDROID_SDK_ROOT/build-tools/35.0.0"
-          "$KS/apksigner" verify --print-certs "$APK" | tee sidik.txt
+          : > sidik.txt
+          for APK in */build/outputs/apk/release/*.apk; do
+            echo "== $APK" | tee -a sidik.txt
+            "$KS/apksigner" verify --print-certs "$APK" | tee -a sidik.txt
+          done
 
       - name: Ringkas galat
         if: always()
