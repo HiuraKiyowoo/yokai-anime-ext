@@ -44,17 +44,21 @@ class Wibutime : HttpSource() {
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    override fun headersBuilder() = super.headersBuilder()
-        .add("apikey", KUNCI_ANON)
-        .add("Authorization", "Bearer $KUNCI_ANON")
-        .add("Accept", "application/json")
-
     // --- HTTP kecil ---------------------------------------------------------
 
+    /**
+     * Header API dipasang PER PERMINTAAN, bukan lewat headersBuilder().
+     *
+     * Aplikasi memakai `source.headers` juga saat mengunduh poster
+     * (MangaCoverFetcher). Kalau Authorization ikut di header global, host
+     * gambar menolak dengan 400 (Backblaze) dan semua poster tampil kosong.
+     */
     private fun ambil(path: String): String {
         val req = Request.Builder()
             .url("$PROYEK/rest/v1/$path")
-            .headers(headers)
+            .header("apikey", KUNCI_ANON)
+            .header("Authorization", "Bearer $KUNCI_ANON")
+            .header("Accept", "application/json")
             .build()
         return client.newCall(req).execute().use { r ->
             if (!r.isSuccessful) throw Exception("Wibutime: HTTP ${r.code} untuk $path")
