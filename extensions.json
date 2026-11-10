@@ -52,5 +52,23 @@
         "baseUrl": "https://animekita.org"
       }
     ]
+  },
+  {
+    "name": "Otakudesu",
+    "module": "otakudesu",
+    "pkg": "eu.kanade.tachiyomi.extension.id.otakudesu",
+    "lang": "id",
+    "code": 1,
+    "version": "1.4.0",
+    "nsfw": 0,
+    "sumber": "HTML otakudesu.blog; stream MP4 cdn.odcloud.net",
+    "sources": [
+      {
+        "name": "Otakudesu",
+        "id": 1,
+        "lang": "id",
+        "baseUrl": "https://otakudesu.blog"
+      }
+    ]
   }
 ]
