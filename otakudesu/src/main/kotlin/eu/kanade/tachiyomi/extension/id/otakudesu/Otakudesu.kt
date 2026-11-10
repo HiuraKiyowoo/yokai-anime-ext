@@ -54,6 +54,7 @@ class Otakudesu : HttpSource() {
 
     private fun Element.keManga(): SManga? {
         val a = selectFirst("div.thumb a[href*=/anime/]")
+            ?: selectFirst("h2 a[href*=/anime/]")
             ?: selectFirst("a[href*=/anime/]")
             ?: return null
         val tautan = a.absUrl("href").ifBlank { a.attr("href") }
@@ -61,17 +62,39 @@ class Otakudesu : HttpSource() {
         if (slug.isBlank()) return null
         return SManga.create().apply {
             url = "/anime/$slug"
-            title = selectFirst("h2.jdlflm")?.text()
-                ?: a.attr("title").ifBlank { slug }
+            title = selectFirst("h2.jdlflm")?.text()?.trim()
+                ?: selectFirst("h2")?.text()?.trim()
+                ?: a.text().trim().ifBlank { a.attr("title").ifBlank { slug } }
             thumbnail_url = selectFirst("img")?.let { it.absUrl("src").ifBlank { it.attr("src") } }
             initialized = false
         }
     }
 
-    private fun daftar(doc: Document): List<SManga> =
-        doc.select("div.detpost, li > div.detpost, article")
-            .mapNotNull { it.keManga() }
-            .distinctBy { it.url }
+    /**
+     * Tiga bentuk daftar di situs ini — semuanya harus ditangani, kalau tidak
+     * daftar tampil kosong:
+     *  - `/ongoing-anime/` -> li > div.detpost (judul di h2.jdlflm)
+     *  - `/anime/`, hasil pencarian -> ul.chivsrc > li (judul di h2 > a)
+     *  - `/genres/<x>/` -> div.col-anime (judul di div.col-anime-title > a)
+     */
+    private fun daftar(doc: Document): List<SManga> {
+        val chivsrc = doc.select("ul.chivsrc > li").mapNotNull { it.keManga() }
+        val detpost = doc.select("div.detpost").mapNotNull { it.keManga() }
+        val kolom = doc.select("div.col-anime").mapNotNull { el ->
+            val a = el.selectFirst("div.col-anime-title a[href*=/anime/]")
+                ?: el.selectFirst("a[href*=/anime/]") ?: return@mapNotNull null
+            val tautan = a.absUrl("href").ifBlank { a.attr("href") }
+            val slug = tautan.trimEnd('/').substringAfterLast("/")
+            if (slug.isBlank()) null else SManga.create().apply {
+                url = "/anime/$slug"
+                title = a.text().trim().ifBlank { slug }
+                thumbnail_url = el.selectFirst("img")
+                    ?.let { it.absUrl("src").ifBlank { it.attr("src") } }
+                initialized = false
+            }
+        }
+        return (chivsrc + detpost + kolom).distinctBy { it.url }
+    }
 
     private fun halaman(path: String, page: Int): Document =
         html(if (page <= 1) "$PROYEK$path" else "$PROYEK$path/page/$page/")
