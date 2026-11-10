@@ -204,24 +204,45 @@ class Otakudesu : HttpSource() {
                 .map { it.absUrl("src").ifBlank { it.attr("src") } }
                 .filter { it.startsWith("http") }
 
-            val mp4 = LinkedHashSet<String>()
+            val tautan = LinkedHashSet<String>()
             for (f in iframes) {
                 val isi = try {
                     html(f, referer = "https://desustream.net/")
                 } catch (_: Exception) {
                     continue
                 }
+                // Jalur 1 (odcdn): MP4 polos di cdn.odcloud.net
                 isi.select("video source[src], video[src], a[href$=.mp4]").forEach { el ->
                     val u = el.absUrl("src").ifBlank { el.absUrl("href") }
-                    if (u.contains(".mp4") || u.contains(".m3u8")) mp4 += u
+                    if (u.startsWith("http")) tautan += u
                 }
-                Regex("""https?://[^\s"'<>]+\.(?:mp4|m3u8)[^\s"'<>]*""")
+                // Jalur 2 (otakuwatch6): URL googlevideo TIDAK berakhiran .mp4, jadi
+                // tidak boleh disaring berdasarkan ekstensi. Entity &amp; ikut ter-escape.
+                isi.select("source[src], video[src]").forEach { el ->
+                    val u = org.jsoup.parser.Parser.unescapeEntities(el.attr("src"), false)
+                    if (u.startsWith("http")) tautan += u
+                }
+                Regex("""https?://[^\s"'<>]+(?:\.mp4|\.m3u8|videoplayback\?)[^\s"'<>]*""")
                     .findAll(isi.outerHtml())
-                    .forEach { mp4 += it.value }
+                    .forEach { tautan += org.jsoup.parser.Parser.unescapeEntities(it.value, false) }
             }
-            mp4.mapIndexed { i, u -> Page(i, u) }
+            tautan.filter { cepatHidup(it) }.ifEmpty { tautan.toList() }
+                .mapIndexed { i, u -> Page(i, u) }
         }
         .subscribeOn(Schedulers.io())
+
+    /** Buang tautan yang sudah mati (googlevideo sering 403) sebelum ditampilkan. */
+    private fun cepatHidup(url: String): Boolean = try {
+        val req = Request.Builder()
+            .url(url)
+            .header("User-Agent", UA)
+            .header("Referer", "https://desustream.com/")
+            .header("Range", "bytes=0-1023")
+            .build()
+        client.newCall(req).execute().use { it.isSuccessful || it.code == 416 }
+    } catch (_: Exception) {
+        false
+    }
 }
 
 /** Genre yang benar-benar ada di otakudesu.blog/genre-list. */

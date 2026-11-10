@@ -58,8 +58,8 @@
     "module": "otakudesu",
     "pkg": "eu.kanade.tachiyomi.extension.id.otakudesu",
     "lang": "id",
-    "code": 2,
-    "version": "1.4.1",
+    "code": 3,
+    "version": "1.4.2",
     "nsfw": 0,
     "sumber": "HTML otakudesu.blog; stream MP4 cdn.odcloud.net",
     "sources": [
