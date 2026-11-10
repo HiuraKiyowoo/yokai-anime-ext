@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 val berkasKeystore: File? = System.getenv("KEYSTORE_FILE")
@@ -59,5 +60,7 @@ kotlin {
 dependencies {
     compileOnly("yokai:source-api:1.0.0")
     compileOnly("com.squareup.okhttp3:okhttp:5.4.0")
+    // jspecify wajib: anotasi @Nullable dari jsoup/okhttp tidak bisa diakses tanpanya
+    compileOnly("org.jspecify:jspecify:1.0.0")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
 }
