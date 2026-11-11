@@ -70,5 +70,23 @@
         "baseUrl": "https://otakudesu.blog"
       }
     ]
+  },
+  {
+    "name": "NontonHentai",
+    "module": "nontonhentai",
+    "pkg": "eu.kanade.tachiyomi.extension.id.nontonhentai",
+    "lang": "id",
+    "code": 1,
+    "version": "1.4.0",
+    "nsfw": 1,
+    "sumber": "WP REST + GDPlayer HLS jv.abplay.store (NSFW)",
+    "sources": [
+      {
+        "name": "NontonHentai",
+        "id": 1,
+        "lang": "id",
+        "baseUrl": "https://nontonhentai.org"
+      }
+    ]
   }
 ]

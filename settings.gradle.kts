@@ -27,6 +27,7 @@ include(":wibutime")
 include(":animein")
 include(":animelovers")
 include(":otakudesu")
+include(":nontonhentai")
 
 /*
  * Pustaka antarmuka sumber (eu.kanade.tachiyomi.source.*) tidak diterbitkan ke
