@@ -22,8 +22,8 @@
     "module": "animein",
     "pkg": "eu.kanade.tachiyomi.extension.id.animein",
     "lang": "id",
-    "code": 4,
-    "version": "1.5.3",
+    "code": 5,
+    "version": "1.5.4",
     "nsfw": 0,
     "sumber": "API AnimeIn (backend aplikasi Nefusoft)",
     "sources": [
