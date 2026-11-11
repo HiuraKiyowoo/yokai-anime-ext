@@ -94,8 +94,8 @@
     "module": "hentaicop",
     "pkg": "eu.kanade.tachiyomi.extension.id.hentaicop",
     "lang": "id",
-    "code": 1,
-    "version": "1.4.0",
+    "code": 2,
+    "version": "1.4.1",
     "nsfw": 1,
     "sumber": "WP REST + pemutar sendiri /play/v/ (HLS CDN jav.*.site)",
     "sources": [

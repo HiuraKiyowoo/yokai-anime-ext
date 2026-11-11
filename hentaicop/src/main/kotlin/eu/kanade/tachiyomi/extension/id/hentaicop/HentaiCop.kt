@@ -41,9 +41,12 @@ class HentaiCop : HttpSource() {
     override val baseUrl = PROYEK
     override val supportsLatest = true
 
+    // Referer & Accept-Language ikut dikirim ke pemutar video oleh aplikasi,
+    // jadi CDN HentaiCop tidak lagi membalas 403 saat memutar .m3u8.
     override fun headersBuilder() = super.headersBuilder()
         .add("User-Agent", UA)
         .add("Accept-Language", "id-ID,id;q=0.9,en;q=0.8")
+        .add("Referer", "$PROYEK/")
 
     // --- HTTP ---------------------------------------------------------------
 
