@@ -88,5 +88,23 @@
         "baseUrl": "https://nontonhentai.org"
       }
     ]
+  },
+  {
+    "name": "HentaiCop",
+    "module": "hentaicop",
+    "pkg": "eu.kanade.tachiyomi.extension.id.hentaicop",
+    "lang": "id",
+    "code": 1,
+    "version": "1.4.0",
+    "nsfw": 1,
+    "sumber": "WP REST + pemutar sendiri /play/v/ (HLS CDN jav.*.site)",
+    "sources": [
+      {
+        "name": "HentaiCop",
+        "id": 1,
+        "lang": "id",
+        "baseUrl": "https://hentaicop.com"
+      }
+    ]
   }
 ]
