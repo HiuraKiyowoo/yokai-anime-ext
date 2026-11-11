@@ -116,8 +116,12 @@ class NontonHentai : HttpSource() {
             val poster = doc?.selectFirst("meta[property=og:image]")?.attr("content")?.ifBlank { null }
             val judulHtml = doc?.selectFirst("meta[property=og:title]")?.attr("content")?.ifBlank { null }
 
+            val ket = doc?.selectFirst("meta[property=og:description]")?.attr("content")?.ifBlank { null }
+                ?: doc?.selectFirst("meta[name=description]")?.attr("content")?.ifBlank { null }
+
             manga.apply {
                 judulHtml?.let { title = org.jsoup.parser.Parser.unescapeEntities(it, false) }
+                ket?.let { description = org.jsoup.parser.Parser.unescapeEntities(it, false) }
                 thumbnail_url = poster ?: thumbnail_url
                 status = SManga.COMPLETED
                 initialized = true
@@ -150,10 +154,12 @@ class NontonHentai : HttpSource() {
 
             val nomor = Regex("""(?i)episode\s*(\d+(?:\.\d+)?)""").find(manga.title)
                 ?.groupValues?.get(1)?.toFloatOrNull() ?: 1f
+            // Nama bab jangan judul seri: aplikasi membuang judul seri dari nama
+            // bab (ChapterRecognition), jadi barisnya akan tampak kosong.
             listOf(
                 SChapter.create().apply {
                     url = manga.url
-                    name = manga.title
+                    name = "Episode ${if (nomor % 1f == 0f) nomor.toInt() else nomor}"
                     chapter_number = nomor
                 },
             )

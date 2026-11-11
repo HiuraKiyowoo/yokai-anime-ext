@@ -121,6 +121,11 @@ class HentaiCop : HttpSource() {
             manga.apply {
                 doc.selectFirst("meta[property=og:title]")?.attr("content")
                     ?.ifBlank { null }?.let { title = bersih(it) }
+                // Deskripsi: aplikasi menampilkan "Tidak ada deskripsi" kalau kosong.
+                val ket = doc.selectFirst("meta[property=og:description]")?.attr("content")
+                    ?.ifBlank { null }
+                    ?: doc.selectFirst("meta[name=description]")?.attr("content")?.ifBlank { null }
+                ket?.let { description = bersih(it) }
                 thumbnail_url = posterDari(doc, halaman) ?: thumbnail_url
                 status = SManga.COMPLETED
                 initialized = true
@@ -144,12 +149,17 @@ class HentaiCop : HttpSource() {
 
     override fun fetchChapterList(manga: SManga): Observable<List<SChapter>> = Observable
         .fromCallable {
-            // satu post = satu judul (episodenya sudah digabung di satu halaman)
+            // satu post = satu judul (episodenya sudah digabung di satu halaman).
+            // Nama bab TIDAK boleh sama dengan judul seri: ChapterRecognition di
+            // aplikasi membuang judul seri dari nama bab, sehingga barisnya jadi
+            // kosong di daftar bab.
+            val nomor = Regex("""(?i)episode\s*(\d+(?:\.\d+)?)""").find(manga.title)
+                ?.groupValues?.get(1)?.toFloatOrNull() ?: 1f
             listOf(
                 SChapter.create().apply {
                     url = manga.url
-                    name = manga.title
-                    chapter_number = 1f
+                    name = "Episode ${if (nomor % 1f == 0f) nomor.toInt() else nomor}"
+                    chapter_number = nomor
                 },
             )
         }

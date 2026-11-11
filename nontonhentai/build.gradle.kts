@@ -17,8 +17,8 @@ android {
         applicationId = "eu.kanade.tachiyomi.extension.id.nontonhentai"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.4.2"
+        versionCode = 4
+        versionName = "1.4.3"
     }
 
     signingConfigs {

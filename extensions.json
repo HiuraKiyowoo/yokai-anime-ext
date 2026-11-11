@@ -76,8 +76,8 @@
     "module": "nontonhentai",
     "pkg": "eu.kanade.tachiyomi.extension.id.nontonhentai",
     "lang": "id",
-    "code": 3,
-    "version": "1.4.2",
+    "code": 4,
+    "version": "1.4.3",
     "nsfw": 1,
     "sumber": "WP REST + GDPlayer HLS jv.abplay.store (NSFW)",
     "sources": [
@@ -94,8 +94,8 @@
     "module": "hentaicop",
     "pkg": "eu.kanade.tachiyomi.extension.id.hentaicop",
     "lang": "id",
-    "code": 2,
-    "version": "1.4.1",
+    "code": 3,
+    "version": "1.4.2",
     "nsfw": 1,
     "sumber": "WP REST + pemutar sendiri /play/v/ (HLS CDN jav.*.site)",
     "sources": [
@@ -112,8 +112,8 @@
     "module": "anichin",
     "pkg": "eu.kanade.tachiyomi.extension.id.anichin",
     "lang": "id",
-    "code": 1,
-    "version": "1.4.0",
+    "code": 2,
+    "version": "1.4.1",
     "nsfw": 0,
     "sumber": "HTML scraping + ok.ru (HLS/MP4) & Streamruby",
     "sources": [

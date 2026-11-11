@@ -140,8 +140,9 @@ class Anichin : HttpSource() {
                     ?.ifBlank { null }?.let { title = bersih(it) }
                 val og = d.selectFirst("meta[property=og:image]")?.attr("content")
                 thumbnail_url = og?.ifBlank { null } ?: thumbnail_url
-                d.selectFirst("div.entry-content p, div.animefull p")?.text()
-                    ?.ifBlank { null }?.let { description = it }
+                val ket = d.selectFirst("div.entry-content p, div.animefull p")?.text()?.ifBlank { null }
+                    ?: d.selectFirst("meta[property=og:description]")?.attr("content")?.ifBlank { null }
+                ket?.let { description = bersih(it) }
                 status = SManga.ONGOING
                 initialized = true
             }
@@ -174,10 +175,12 @@ class Anichin : HttpSource() {
 
             val nomor = Regex("""(?i)episode[- ]?(\d+(?:\.\d+)?)""").find(manga.url)
                 ?.groupValues?.get(1)?.toFloatOrNull() ?: 1f
+            // Jangan pakai judul seri sebagai nama bab: aplikasi membuang judul
+            // seri dari nama bab sehingga barisnya tampak kosong.
             listOf(
                 SChapter.create().apply {
                     url = manga.url
-                    name = manga.title
+                    name = "Episode ${if (nomor % 1f == 0f) nomor.toInt() else nomor}"
                     chapter_number = nomor
                 },
             )
