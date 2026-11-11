@@ -22,8 +22,8 @@
     "module": "animein",
     "pkg": "eu.kanade.tachiyomi.extension.id.animein",
     "lang": "id",
-    "code": 3,
-    "version": "1.5.2",
+    "code": 4,
+    "version": "1.5.3",
     "nsfw": 0,
     "sumber": "API AnimeIn (backend aplikasi Nefusoft)",
     "sources": [
@@ -40,8 +40,8 @@
     "module": "animelovers",
     "pkg": "eu.kanade.tachiyomi.extension.id.animelovers",
     "lang": "id",
-    "code": 2,
-    "version": "1.4.1",
+    "code": 3,
+    "version": "1.4.2",
     "nsfw": 0,
     "sumber": "API lama apps.animekita.org/api/v1.2.5 (tanpa enkripsi)",
     "sources": [
