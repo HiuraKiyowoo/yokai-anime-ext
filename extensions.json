@@ -76,8 +76,8 @@
     "module": "nontonhentai",
     "pkg": "eu.kanade.tachiyomi.extension.id.nontonhentai",
     "lang": "id",
-    "code": 2,
-    "version": "1.4.1",
+    "code": 3,
+    "version": "1.4.2",
     "nsfw": 1,
     "sumber": "WP REST + GDPlayer HLS jv.abplay.store (NSFW)",
     "sources": [
