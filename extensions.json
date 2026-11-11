@@ -112,8 +112,8 @@
     "module": "anichin",
     "pkg": "eu.kanade.tachiyomi.extension.id.anichin",
     "lang": "id",
-    "code": 3,
-    "version": "1.4.2",
+    "code": 4,
+    "version": "1.4.3",
     "nsfw": 0,
     "sumber": "HTML scraping + ok.ru (HLS/MP4) & Streamruby",
     "sources": [
