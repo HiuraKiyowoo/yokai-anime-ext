@@ -76,7 +76,9 @@ class NontonHentai : HttpSource() {
     // --- Katalog ------------------------------------------------------------
 
     override fun fetchPopularManga(page: Int): Observable<MangasPage> = Observable
-        .fromCallable { halaman("/wp-json/wp/v2/posts?orderby=comment_count&order=desc", page) }
+        // orderby=comment_count DITOLAK WP ini (400 rest_invalid_param);
+        // pilihan yang sah: date, id, title, modified, slug, include, rand.
+        .fromCallable { halaman("/wp-json/wp/v2/posts?orderby=date&order=desc", page) }
         .subscribeOn(Schedulers.io())
 
     override fun fetchLatestUpdates(page: Int): Observable<MangasPage> = Observable
@@ -90,10 +92,12 @@ class NontonHentai : HttpSource() {
             val arr = daftar("/wp-json/wp/v2/search?search=$kunci&per_page=20&page=$page&subtype=post")
             val isi = (0 until arr.length()).mapNotNull { i ->
                 val o = arr.optJSONObject(i) ?: return@mapNotNull null
-                val slug = slugDari(o.optString("url"))
-                if (slug.isBlank()) null else SManga.create().apply {
-                    url = "/$slug"
-                    title = (o.optString("title").ifBlank { slug })
+                // hasil pencarian bisa berupa /series/<nama>/ (halaman seri) atau
+                // /<slug-episode>/. Simpan path apa adanya — jangan dianggap slug.
+                val path = o.optString("url").removePrefix(PROYEK).ifBlank { return@mapNotNull null }
+                SManga.create().apply {
+                    url = if (path.startsWith("/")) path else "/$path"
+                    title = (o.optString("title").ifBlank { path })
                         .let { org.jsoup.parser.Parser.unescapeEntities(it, false) }
                     initialized = false
                 }
@@ -106,24 +110,14 @@ class NontonHentai : HttpSource() {
 
     override fun fetchMangaDetails(manga: SManga): Observable<SManga> = Observable
         .fromCallable {
-            val slug = manga.url.trim('/')
-            val arr = daftar("/wp-json/wp/v2/posts?slug=$slug&per_page=1")
-            val o = if (arr.length() > 0) arr.getJSONObject(0) else null
-
-            // poster tidak tersedia di REST API -> ambil dari meta og:image halaman
-            val halamanHtml = runCatching { Jsoup.parse(teks("$PROYEK/${manga.url}")) }.getOrNull()
-            val poster = halamanHtml?.selectFirst("meta[property=og:image]")?.attr("content")
-                ?.ifBlank { null }
+            // HTML lebih andal: berlaku untuk /series/<nama>/ maupun /<slug-episode>/.
+            // REST API hanya dipakai sebagai pelengkap (featured_media selalu 0).
+            val doc = runCatching { Jsoup.parse(teks("$PROYEK${manga.url}")) }.getOrNull()
+            val poster = doc?.selectFirst("meta[property=og:image]")?.attr("content")?.ifBlank { null }
+            val judulHtml = doc?.selectFirst("meta[property=og:title]")?.attr("content")?.ifBlank { null }
 
             manga.apply {
-                if (o != null) {
-                    title = org.jsoup.parser.Parser.unescapeEntities(
-                        o.optJSONObject("title")?.optString("rendered")
-                            ?.replace(Regex("<[^>]+>"), "")?.trim() ?: title, false,
-                    )
-                    description = o.optJSONObject("excerpt")?.optString("rendered")
-                        ?.replace(Regex("<[^>]+>"), "")?.trim()?.ifBlank { null }
-                }
+                judulHtml?.let { title = org.jsoup.parser.Parser.unescapeEntities(it, false) }
                 thumbnail_url = poster ?: thumbnail_url
                 status = SManga.COMPLETED
                 initialized = true
@@ -133,14 +127,33 @@ class NontonHentai : HttpSource() {
 
     override fun fetchChapterList(manga: SManga): Observable<List<SChapter>> = Observable
         .fromCallable {
-            // satu post = satu episode, jadi daftar chapter selalu berisi satu entri
-            val judul = manga.title
-            val nomor = Regex("""(?i)episode\s*(\d+(?:\.\d+)?)""").find(judul)
+            val doc = Jsoup.parse(teks("$PROYEK${manga.url}"))
+            // Halaman /series/... memuat tautan semua episode.
+            // Halaman episode tunggal tidak punya daftar -> jatuh ke satu entri.
+            val eps = doc.select("a[href$=/]")
+                .map { it.absUrl("href").ifBlank { it.attr("href") } }
+                .filter { it.startsWith(PROYEK) && Regex("""-episode-\d+""").containsMatchIn(it) }
+                .distinct()
+
+            if (eps.isNotEmpty()) {
+                return@fromCallable eps.map { tautan ->
+                    val slug = tautan.trimEnd('/').substringAfterLast("/")
+                    val judul = Regex("""(?i)episode\s*(\d+(?:\.\d+)?)""")
+                        .find(slug)?.groupValues?.get(1)?.toFloatOrNull() ?: -1f
+                    SChapter.create().apply {
+                        url = "/$slug"
+                        name = "Episode ${if (judul >= 0) judul.toInt() else slug}"
+                        chapter_number = if (judul >= 0) judul else -1f
+                    }
+                }.sortedBy { it.chapter_number }
+            }
+
+            val nomor = Regex("""(?i)episode\s*(\d+(?:\.\d+)?)""").find(manga.title)
                 ?.groupValues?.get(1)?.toFloatOrNull() ?: 1f
             listOf(
                 SChapter.create().apply {
                     url = manga.url
-                    name = judul
+                    name = manga.title
                     chapter_number = nomor
                 },
             )
