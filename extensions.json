@@ -106,5 +106,23 @@
         "baseUrl": "https://hentaicop.com"
       }
     ]
+  },
+  {
+    "name": "Anichin",
+    "module": "anichin",
+    "pkg": "eu.kanade.tachiyomi.extension.id.anichin",
+    "lang": "id",
+    "code": 1,
+    "version": "1.4.0",
+    "nsfw": 0,
+    "sumber": "HTML scraping + ok.ru (HLS/MP4) & Streamruby",
+    "sources": [
+      {
+        "name": "Anichin",
+        "id": 1,
+        "lang": "id",
+        "baseUrl": "https://anichin.moe"
+      }
+    ]
   }
 ]

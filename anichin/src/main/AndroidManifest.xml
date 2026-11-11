@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-feature
+        android:name="tachiyomi.extension"
+        android:required="false" />
+
+    <application
+        android:label="Anichin"
+        android:icon="@mipmap/ic_launcher"
+        android:hasCode="true">
+
+        <meta-data
+            android:name="tachiyomix.name"
+            android:value="Anichin" />
+        <meta-data
+            android:name="tachiyomix.extensionLib"
+            android:value="1.5" />
+        <meta-data
+            android:name="tachiyomi.extension.class"
+            android:value="eu.kanade.tachiyomi.extension.id.anichin.AnichinFactory" />
+        <meta-data
+            android:name="tachiyomi.extension.factory"
+            android:value="eu.kanade.tachiyomi.extension.id.anichin.AnichinFactory" />
+    </application>
+
+</manifest>

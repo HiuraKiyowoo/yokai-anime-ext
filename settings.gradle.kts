@@ -29,6 +29,7 @@ include(":animelovers")
 include(":otakudesu")
 include(":nontonhentai")
 include(":hentaicop")
+include(":anichin")
 
 /*
  * Pustaka antarmuka sumber (eu.kanade.tachiyomi.source.*) tidak diterbitkan ke
