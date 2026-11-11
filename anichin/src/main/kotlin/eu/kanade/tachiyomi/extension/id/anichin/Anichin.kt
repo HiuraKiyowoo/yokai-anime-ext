@@ -55,9 +55,12 @@ class Anichin : HttpSource() {
     override val baseUrl = PROYEK
     override val supportsLatest = true
 
+    // Referer wajib: /wp-content/uploads/* membalas 403 tanpa Referer situs.
+    // Header ini juga ikut dipakai saat memuat poster dan saat memutar video.
     override fun headersBuilder() = super.headersBuilder()
         .add("User-Agent", UA)
         .add("Accept-Language", "id-ID,id;q=0.9,en;q=0.8")
+        .add("Referer", "$PROYEK/")
 
     // --- HTTP ---------------------------------------------------------------
 
@@ -71,7 +74,9 @@ class Anichin : HttpSource() {
         }
     }
 
-    private fun doc(url: String, referer: String? = null) = Jsoup.parse(teks(url, referer))
+    // WAJIB memakai base URI: gambar & tautan di situs ini memakai path relatif
+    // (/wp-content/..., /judul/), dan tanpa baseUri absUrl() mengembalikan "".
+    private fun doc(url: String, referer: String? = null) = Jsoup.parse(teks(url, referer), url)
 
     private fun bersih(s: String) =
         Parser.unescapeEntities(s.replace(Regex("<[^>]+>"), ""), false).trim()
@@ -133,8 +138,9 @@ class Anichin : HttpSource() {
 
     override fun fetchMangaDetails(manga: SManga): Observable<SManga> = Observable
         .fromCallable {
-            val halaman = teks("$PROYEK${manga.url}")
-            val d = Jsoup.parse(halaman)
+            val alamat = "$PROYEK${manga.url}"
+            val halaman = teks(alamat)
+            val d = Jsoup.parse(halaman, alamat)
             manga.apply {
                 d.selectFirst("meta[property=og:title]")?.attr("content")
                     ?.ifBlank { null }?.let { title = bersih(it) }
