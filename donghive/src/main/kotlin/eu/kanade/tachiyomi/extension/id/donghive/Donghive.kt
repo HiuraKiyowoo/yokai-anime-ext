@@ -79,7 +79,7 @@ class Donghive : HttpSource() {
             .header("Accept-Language", AL)
         b.header("Referer", referer ?: "$PROYEK/")
         return client.newCall(b.build()).execute().use { r ->
-            if (!r.successful) throw Exception("Donghive: HTTP ${r.code} untuk $url")
+            if (!r.isSuccessful) throw Exception("Donghive: HTTP ${r.code} untuk $url")
             r.body?.string().orEmpty()
         }
     }
