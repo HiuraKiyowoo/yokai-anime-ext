@@ -124,5 +124,23 @@
         "baseUrl": "https://anichin.moe"
       }
     ]
+  },
+  {
+    "name": "Kuramanime",
+    "module": "kuramanime",
+    "pkg": "eu.kanade.tachiyomi.extension.id.kuramanime",
+    "lang": "id",
+    "code": 1,
+    "version": "1.0.0",
+    "nsfw": 0,
+    "sumber": "HTML Kuramanime; alur 3 langkah (CSRF + token halaman + POST authorization) menghasilkan <source> .my.id/kdrive/*.mp4 (HTTP 206, Range)",
+    "sources": [
+      {
+        "name": "Kuramanime",
+        "id": 1,
+        "lang": "id",
+        "baseUrl": "https://v20.kuramanime.ing"
+      }
+    ]
   }
 ]

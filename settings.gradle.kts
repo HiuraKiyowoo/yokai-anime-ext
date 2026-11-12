@@ -30,6 +30,7 @@ include(":otakudesu")
 include(":nontonhentai")
 include(":hentaicop")
 include(":anichin")
+include(":kuramanime")
 
 /*
  * Pustaka antarmuka sumber (eu.kanade.tachiyomi.source.*) tidak diterbitkan ke
