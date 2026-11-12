@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.extension.en.cosplaytele
 
+import eu.kanade.tachiyomi.source.model.Filter
 import eu.kanade.tachiyomi.source.model.FilterList
 import eu.kanade.tachiyomi.source.model.MangasPage
 import eu.kanade.tachiyomi.source.model.Page
@@ -50,6 +51,21 @@ private const val PER_HALAMAN = 24
 private const val CMS = "https://cossora.stream"
 
 private const val BIDANG = "id,slug,link,title,featured_media,_links,_embedded"
+
+/**
+ * Satu dropdown = satu parameter taksonomi WordPress.
+ * `tipe` menentukan bagaimana nilainya dikirim: kategori lewat endpoint populer-posts
+ * (`taxonomy=category&term_id=`) dan keduanya lewat `/wp/v2/posts`.
+ */
+private class Pilih(
+    nama: String,
+    val kunci: String,
+    val tipe: String,
+    val pasangan: List<Pair<String, String>>,
+    bawaan: Int = 0,
+) : Filter.Select<String>(nama, pasangan.map { it.second }.toTypedArray(), bawaan) {
+    val nilai: String get() = pasangan.getOrNull(state)?.first.orEmpty()
+}
 
 class Cosplaytele : HttpSource() {
 
@@ -105,11 +121,15 @@ class Cosplaytele : HttpSource() {
         return url.replace(Regex("-\\d+x\\d+(?=\\.\\w+$)"), "")
     }
 
-    private fun terbaru(page: Int, cari: String? = null): MangasPage {
+    private fun terbaru(page: Int, cari: String? = null, filters: FilterList? = null): MangasPage {
         val q = buildString {
             append("per_page=$PER_HALAMAN&page=$page&orderby=date&order=desc")
             append("&_embed=wp:featuredmedia&_fields=$BIDANG")
             if (!cari.isNullOrBlank()) append("&search=${URLEncoder.encode(cari, "UTF-8")}")
+            filters?.filterIsInstance<Pilih>()?.forEach { f ->
+                val v = f.nilai
+                if (v.isNotBlank()) append("&${f.kunci}=$v")
+            }
         }
         val isi = baris(wp(q))
         return MangasPage(isi, isi.isNotEmpty())
@@ -120,16 +140,48 @@ class Cosplaytele : HttpSource() {
      * beserta jumlah tontonan, TAPI tidak mendukung _embed — jadi id-nya diambil dulu,
      * lalu satu permintaan kedua memakai include= untuk poster & slug.
      */
-    private fun populer(page: Int): MangasPage {
+    private fun populer(page: Int, filters: FilterList? = null): MangasPage {
+        val pilih = filters?.filterIsInstance<Pilih>()?.filter { it.nilai.isNotBlank() }.orEmpty()
+        val kategori = pilih.firstOrNull { it.tipe == "kategori" }?.nilai
+        val tag = pilih.firstOrNull { it.tipe == "tag" }?.nilai
+
+        // Tag: endpoint populer-posts hanya terbukti menerima taksonomi kategori,
+        // jadi penyaringan tag memakai arsip biasa (tetap konsisten dengan filternya).
+        if (tag != null) return terbaru(page, null, filters)
+
         runCatching {
-            val arr = JSONArray(teks("$PROYEK/wp-json/wordpress-popular-posts/v1/popular-posts?limit=$PER_HALAMAN&page=$page"))
+            var q = "$PROYEK/wp-json/wordpress-popular-posts/v1/popular-posts?limit=$PER_HALAMAN&page=$page"
+            if (kategori != null) q += "&taxonomy=category&term_id=$kategori"
+            val arr = JSONArray(teks(q))
             val id = (0 until arr.length()).mapNotNull { i -> arr.optJSONObject(i)?.optInt("id")?.takeIf { it > 0 } }
             if (id.isEmpty()) return MangasPage(emptyList(), false)
             val isi = baris(wp("include=${id.joinToString(",")}&per_page=$PER_HALAMAN&orderby=include&_embed=wp:featuredmedia&_fields=$BIDANG"))
             if (isi.isNotEmpty()) return MangasPage(isi, id.size == PER_HALAMAN)
         }
         // cadangan bila plugin populer mati: pakai yang paling banyak diperbarui
-        return terbaru(page)
+        return terbaru(page, null, filters)
+    }
+
+    // --- Filter (kategori & tag WordPress) ---------------------------------
+
+    private val kueTaksonomi = HashMap<String, List<Pair<String, String>>>()
+
+    /** Daftar taksonomi diambil sekali per sumber (categories/tags), urut dari yang paling banyak. */
+    private fun taksonomi(jejak: String): List<Pair<String, String>> {
+        kueTaksonomi[jejak]?.let { return it }
+        val hasil = runCatching {
+            val arr = JSONArray(
+                teks("$PROYEK/wp-json/wp/v2/$jejak?per_page=100&orderby=count&order=desc&_fields=id,name,count"),
+            )
+            (0 until arr.length()).mapNotNull { i ->
+                val o = arr.optJSONObject(i) ?: return@mapNotNull null
+                val id = o.optInt("id")
+                val nama = bersih(o.optString("name"))
+                if (id <= 0 || nama.isBlank()) null else id.toString() to "$nama (${o.optInt("count")})"
+            }
+        }.getOrDefault(emptyList())
+        if (hasil.isNotEmpty()) kueTaksonomi[jejak] = hasil
+        return hasil
     }
 
     override fun fetchPopularManga(page: Int): Observable<MangasPage> = Observable
@@ -141,10 +193,15 @@ class Cosplaytele : HttpSource() {
         .subscribeOn(Schedulers.io())
 
     override fun fetchSearchManga(page: Int, query: String, filters: FilterList): Observable<MangasPage> = Observable
-        .fromCallable { terbaru(page, query.trim()) }
+        .fromCallable { terbaru(page, query.trim(), filters) }
         .subscribeOn(Schedulers.io())
 
-    override fun getFilterList(): FilterList = FilterList(emptyList())
+    override fun getFilterList(): FilterList = FilterList(
+        listOf<Filter<*>>(
+            Pilih("Kategori", "categories", "kategori", listOf("" to "Semua") + taksonomi("categories")),
+            Pilih("Tag", "tags", "tag", listOf("" to "Semua") + taksonomi("tags")),
+        ),
+    )
 
     // --- Isi post -----------------------------------------------------------
 

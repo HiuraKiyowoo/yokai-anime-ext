@@ -28,6 +28,29 @@ private const val UA = "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 " +
     "(KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
 private const val PER_HALAMAN = 25
 
+/** Satu dropdown; nilainya dipakai sebagai parameter/jalur filter. */
+private class Pilih(
+    nama: String,
+    val pasangan: List<Pair<String, String>>,
+    bawaan: Int = 0,
+) : eu.kanade.tachiyomi.source.model.Filter.Select<String>(
+    nama,
+    pasangan.map { it.second }.toTypedArray(),
+    bawaan,
+) {
+    val nilai: String get() = pasangan.getOrNull(state)?.first.orEmpty()
+}
+
+/** Genre asli situs: jalur `/genres/<slug>/` (42 genre, terukur 12 Nov 2026). */
+private val GENRE = listOf(
+    "ahegao", "anal", "armpit", "bdsm", "big-oppai", "blowjob", "bondage", "creampie",
+    "dark-skin", "dilf", "femdom", "footjob", "forced", "harem", "incest", "josei",
+    "lactation", "maid", "masturbation", "milf", "mind-break", "netorare", "nurse", "office-lady",
+    "paizuri", "pregnant", "rape", "romance", "school", "schoolgirl", "sister", "slave",
+    "stocking", "succubus", "swimsuit", "teacher", "tentacle", "threesome", "tsundere", "ugly-bastard",
+    "vanilla", "yuri",
+).map { it to it.replace("-", " ").replaceFirstChar { c -> c.uppercase() } }
+
 class NontonHentai : HttpSource() {
 
     override val name = "NontonHentai"
@@ -75,10 +98,55 @@ class NontonHentai : HttpSource() {
 
     // --- Katalog ------------------------------------------------------------
 
+    /**
+     * Populer: blok "Trending Minggu Ini" di beranda (server-rendered).
+     *
+     * Sebelumnya Populer dan Terbaru memakai URL yang persis sama
+     * (`/wp-json/wp/v2/posts?orderby=date`) sehingga dua tab itu isinya kembar.
+     * (Catatan: `orderby=rand` DITOLAK 400 di situs ini, jadi bukan pilihan.)
+     *
+     * Tautan di slider campur: `/series/<slug>/` (halaman seri) dan
+     * `/<slug>-episode-N-.../` (post episode). Tautan episode ditukar jadi objek post
+     * lewat SATU permintaan REST `slug=a,b,c` supaya bentuk entri tetap sama seperti katalog.
+     */
     override fun fetchPopularManga(page: Int): Observable<MangasPage> = Observable
-        // orderby=comment_count DITOLAK WP ini (400 rest_invalid_param);
-        // pilihan yang sah: date, id, title, modified, slug, include, rand.
-        .fromCallable { halaman("/wp-json/wp/v2/posts?orderby=date&order=desc", page) }
+        .fromCallable {
+            if (page > 1) return@fromCallable MangasPage(emptyList(), false)
+            val doc = Jsoup.parse(teks("$PROYEK/"), PROYEK)
+            val tautan = doc.select("a:has(span.numa), a:has(.bghover)")
+                .map { it.absUrl("href") }
+                .filter { it.startsWith(PROYEK) && !it.contains("/genres/") }
+                .distinct()
+                .take(PER_HALAMAN)
+            val seri = tautan.filterNot { it.contains("-episode-") }
+                .map { path ->
+                    val jalur = path.removePrefix(PROYEK)
+                    SManga.create().apply {
+                        url = jalur
+                        title = jalur.trim('/').substringAfterLast("/").replace('-', ' ')
+                            .split(" ").joinToString(" ") { s -> s.replaceFirstChar { c -> c.uppercase() } }
+                        initialized = false
+                    }
+                }
+            val slugEpisode = tautan.filter { it.contains("-episode-") }.map { slugDari(it) }
+            val dariPost = if (slugEpisode.isEmpty()) {
+                emptyList()
+            } else {
+                runCatching {
+                    val arr = daftar(
+                        "/wp-json/wp/v2/posts?slug=${slugEpisode.joinToString(",")}" +
+                            "&per_page=${slugEpisode.size}&_fields=slug,link,title",
+                    )
+                    (0 until arr.length()).mapNotNull { i ->
+                        val o = arr.optJSONObject(i) ?: return@mapNotNull null
+                        val slug = o.optString("slug").ifBlank { slugDari(o.optString("link")) }
+                        if (slug.isBlank()) null else keManga(o, slug)
+                    }
+                }.getOrDefault(emptyList())
+            }
+            val urut = seri + dariPost
+            MangasPage(urut, false)
+        }
         .subscribeOn(Schedulers.io())
 
     override fun fetchLatestUpdates(page: Int): Observable<MangasPage> = Observable
@@ -87,9 +155,35 @@ class NontonHentai : HttpSource() {
 
     override fun fetchSearchManga(page: Int, query: String, filters: eu.kanade.tachiyomi.source.model.FilterList): Observable<MangasPage> = Observable
         .fromCallable {
-            val kunci = java.net.URLEncoder.encode(query.trim(), "UTF-8")
+            val kunci = query.trim()
+            val genre = filters.filterIsInstance<Pilih>().firstOrNull()?.nilai.orEmpty()
+
+            // Genre situs hanya tersedia sebagai halaman HTML /genres/<slug>/page/N/.
+            if (genre.isNotBlank()) {
+                val alamat = if (page <= 1) "$PROYEK/genres/$genre/" else "$PROYEK/genres/$genre/page/$page/"
+                val doc = Jsoup.parse(teks(alamat), alamat)
+                val isi = doc.select("article.bs a[href]")
+                    .mapNotNull { a ->
+                        val url = a.absUrl("href").ifBlank { a.attr("href") }
+                        if (!url.startsWith(PROYEK)) return@mapNotNull null
+                        val judul = a.attr("title").ifBlank { a.selectFirst("h2, h3, .tt")?.text().orEmpty() }
+                        if (judul.isBlank()) return@mapNotNull null
+                        if (kunci.isNotBlank() && !judul.contains(kunci, ignoreCase = true)) return@mapNotNull null
+                        SManga.create().apply {
+                            this.url = url.removePrefix(PROYEK)
+                            title = org.jsoup.parser.Parser.unescapeEntities(judul, false).trim()
+                            val img = a.selectFirst("img")
+                            thumbnail_url = img?.absUrl("src")?.ifBlank { img.attr("data-src") }?.ifBlank { null }
+                            initialized = false
+                        }
+                    }
+                    .distinctBy { it.url }
+                return@fromCallable MangasPage(isi, isi.isNotEmpty())
+            }
+
             if (kunci.isBlank()) return@fromCallable fetchPopularManga(page).toBlocking().first()
-            val arr = daftar("/wp-json/wp/v2/search?search=$kunci&per_page=20&page=$page&subtype=post")
+            val kunciEnc = java.net.URLEncoder.encode(kunci, "UTF-8")
+            val arr = daftar("/wp-json/wp/v2/search?search=$kunciEnc&per_page=20&page=$page&subtype=post")
             val isi = (0 until arr.length()).mapNotNull { i ->
                 val o = arr.optJSONObject(i) ?: return@mapNotNull null
                 // hasil pencarian bisa berupa /series/<nama>/ (halaman seri) atau
@@ -105,6 +199,13 @@ class NontonHentai : HttpSource() {
             MangasPage(isi, isi.isNotEmpty())
         }
         .subscribeOn(Schedulers.io())
+
+    override fun getFilterList(): eu.kanade.tachiyomi.source.model.FilterList =
+        eu.kanade.tachiyomi.source.model.FilterList(
+            listOf<eu.kanade.tachiyomi.source.model.Filter<*>>(
+                Pilih("Genre", listOf("" to "Semua") + GENRE),
+            ),
+        )
 
     // --- Detail & episode ---------------------------------------------------
 
