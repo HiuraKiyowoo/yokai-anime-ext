@@ -8,8 +8,10 @@ import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.online.HttpSource
 import okhttp3.Cookie
 import okhttp3.CookieJar
+import okhttp3.Dns
 import okhttp3.FormBody
 import okhttp3.HttpUrl
+import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import org.jsoup.Jsoup
@@ -17,7 +19,9 @@ import org.jsoup.nodes.Document
 import org.jsoup.parser.Parser
 import rx.Observable
 import rx.schedulers.Schedulers
+import java.net.InetAddress
 import java.net.URLEncoder
+import java.net.UnknownHostException
 import java.util.concurrent.TimeUnit
 
 /**
@@ -41,6 +45,56 @@ import java.util.concurrent.TimeUnit
  * `video/mp4`, `accept-ranges: bytes`) — tidak butuh Referer, token, maupun service worker.
  * Bentuk `/0:/...` (tanpa `/kdrive/`) adalah URL UNDUHAN, jangan dipakai.
  */
+/**
+ * Jalur cadangan DNS lewat DNS-over-HTTPS.
+ *
+ * Sebagian ISP Indonesia memblokir `*.kuramanime.ing` pada resolver operator, sehingga
+ * aplikasi membalas `No address associated with hostname` (UnknownHostException) padahal
+ * situsnya hidup — terukur: DNS sistem gagal, 8.8.8.8 & DoH `dns.google` menjawab
+ * `104.21.66.92` / `172.67.158.107` dan situsnya balas HTTP 200.
+ *
+ * Urutannya: coba resolver sistem dulu (cepat & normal), baru tanya DoH kalau gagal.
+ * Hasilnya disimpan sebentar supaya tidak ada satu kueri DoH per permintaan.
+ * Catatan: ini hanya menolong permintaan yang lewat `client` sumber (katalog, detail,
+ * episode, stream). Poster yang diunduh aplikasi dan pemutar video memakai DNS sistem —
+ * untuk keduanya jalannya adalah Private DNS di setelan ponsel.
+ */
+private class DohKuramanime : Dns {
+    private val kue = LinkedHashMap<String, Pair<Long, List<InetAddress>>>()
+
+    override fun lookup(hostname: String): List<InetAddress> {
+        runCatching { Dns.SYSTEM.lookup(hostname) }.getOrNull()
+            ?.takeIf { it.isNotEmpty() }
+            ?.let { return it }
+
+        val sekarang = System.currentTimeMillis()
+        kue[hostname]?.takeIf { sekarang - it.first < 5 * 60_000L }?.let { return it.second }
+
+        val alamat = runCatching { tanyaDoh(hostname) }.getOrNull().orEmpty()
+        if (alamat.isEmpty()) throw UnknownHostException("Kuramanime: $hostname tidak bisa di-resolve")
+        kue[hostname] = sekarang to alamat
+        return alamat
+    }
+
+    /** Pertanyaan DoH memakai klien terpisah tanpa Dns kustom supaya tidak rekursif. */
+    private fun tanyaDoh(host: String): List<InetAddress> {
+        val klien = OkHttpClient.Builder()
+            .connectTimeout(6, TimeUnit.SECONDS)
+            .readTimeout(6, TimeUnit.SECONDS)
+            .build()
+        val permintaan = Request.Builder()
+            .url("https://dns.google/resolve?name=${URLEncoder.encode(host, "UTF-8")}&type=A")
+            .header("accept", "application/dns-json")
+            .build()
+        val isi = klien.newCall(permintaan).execute().use { it.body?.string().orEmpty() }
+        val jawab = JSONObject(isi).optJSONArray("Answer") ?: return emptyList()
+        return (0 until jawab.length()).mapNotNull { i ->
+            val data = jawab.optJSONObject(i)?.optString("data").orEmpty()
+            if (data.isBlank()) null else runCatching { InetAddress.getByName(data) }.getOrNull()
+        }
+    }
+}
+
 class Kuramanime : HttpSource() {
 
     override val name = "Kuramanime"
@@ -58,6 +112,11 @@ class Kuramanime : HttpSource() {
         .add("User-Agent", ua)
         .add("Accept-Language", "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7")
         .add("Referer", "$baseUrl/")
+
+    /** Semua permintaan sumber lewat klien ini, jadi DoH-nya ikut ke katalog & episode. */
+    override val client: OkHttpClient = super.client.newBuilder()
+        .dns(DohKuramanime())
+        .build()
 
     // ---------- HTTP ----------
 

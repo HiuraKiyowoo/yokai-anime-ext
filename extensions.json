@@ -130,10 +130,10 @@
     "module": "kuramanime",
     "pkg": "eu.kanade.tachiyomi.extension.id.kuramanime",
     "lang": "id",
-    "code": 2,
-    "version": "1.4.1",
+    "code": 3,
+    "version": "1.4.2",
     "nsfw": 0,
-    "sumber": "HTML Kuramanime; alur 3 langkah (CSRF + token halaman + POST authorization) menghasilkan <source> .my.id/kdrive/*.mp4 (HTTP 206, Range)",
+    "sumber": "HTML Kuramanime; alur 3 langkah (CSRF + token halaman + POST authorization) menghasilkan <source> .my.id/kdrive/*.mp4 (HTTP 206, Range) + cadangan DNS-over-HTTPS (ISP Indonesia memblokir DNS *.kuramanime.ing)",
     "sources": [
       {
         "name": "Kuramanime",
