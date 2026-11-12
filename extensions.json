@@ -142,5 +142,23 @@
         "baseUrl": "https://v20.kuramanime.ing"
       }
     ]
+  },
+  {
+    "name": "Cosplaytele",
+    "module": "cosplaytele",
+    "pkg": "eu.kanade.tachiyomi.extension.en.cosplaytele",
+    "lang": "en",
+    "code": 1,
+    "version": "1.4.0",
+    "nsfw": 1,
+    "sumber": "WordPress 7.1.4; katalog /wp-json/wp/v2/posts + populer wordpress-popular-posts; video cossora.stream/embed/<uuid> (AES-CBC kunci 32-hex per video; embed wajib Referer halaman post)",
+    "sources": [
+      {
+        "name": "Cosplaytele",
+        "id": 1,
+        "lang": "en",
+        "baseUrl": "https://cosplaytele.com"
+      }
+    ]
   }
 ]
