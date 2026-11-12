@@ -145,9 +145,9 @@ class Donghive : HttpSource() {
      */
     override fun fetchLatestUpdates(page: Int): Observable<MangasPage> = Observable
         .fromCallable {
-            val url = "$PROYEK/wp-json/wp/v2/posts?per_page=$PER_HALAMAN&page=$page" +
+            val alamat = "$PROYEK/wp-json/wp/v2/posts?per_page=$PER_HALAMAN&page=$page" +
                 "&orderby=date&order=desc&_embed=wp:term&_fields=link,title,categories,_embedded"
-            val arr = JSONArray(teks(url))
+            val arr = JSONArray(teks(alamat))
             val lihat = LinkedHashMap<String, SManga>()
             for (i in 0 until arr.length()) {
                 val o = arr.optJSONObject(i) ?: continue
@@ -155,7 +155,7 @@ class Donghive : HttpSource() {
                 if (slug.isBlank()) continue
                 if (lihat.containsKey("/$slug/")) continue
                 lihat["/$slug/"] = SManga.create().apply {
-                    url = "/$slug/"
+                    this.url = "/$slug/"
                     title = judulSeri(o).ifBlank { slug }
                     initialized = false
                 }
