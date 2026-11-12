@@ -102,7 +102,16 @@ class Animein : HttpSource() {
         thumbnail_url = o.str("image_poster")
         description = o.str("synopsis")
         author = o.str("studio")
+        // API mengirim genre sebagai SATU string berpemisah koma tanpa spasi
+        // ("Drama,Romance"). Aplikasi memecah genre dengan ", " (koma + spasi),
+        // jadi kalau diteruskan apa adanya seluruh genre tampil sebagai satu chip.
         genre = o.str("genre")
+            ?.split(",", "|", ";")
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?.distinct()
+            ?.joinToString(", ")
+            ?.takeIf { it.isNotBlank() }
         status = when (o.str("status")?.uppercase()) {
             "ONGOING", "AIRING" -> SManga.ONGOING
             "COMPLETED", "COMPLETE", "FINISHED" -> SManga.COMPLETED
@@ -189,13 +198,20 @@ class Animein : HttpSource() {
         .fromCallable {
             val epId = chapter.url.removePrefix("/episode/")
             val server = data("/3/2/episode/streamnew/$epId").daftar("server")
-            server
+            val halaman = server
                 .map { it.jsonObject }
                 .filter { it.str("type")?.lowercase() == "direct" }
                 .mapNotNull { o -> o.str("link")?.takeIf { it.startsWith("http") }?.let { (o.str("quality") ?: "") to it } }
                 .distinctBy { it.second }
                 .sortedByDescending { tingkat(it.first) }
                 .mapIndexed { i, (_, link) -> Page(i, link) }
+            // Jalur "semi"/embed (new.uservideo.xyz) sudah mati — domainnya kini parkir —
+            // jadi kalau tidak ada server "direct" tidak ada yang bisa diputar. Lempar
+            // kesalahan supaya aplikasi menampilkan pesannya, bukan pemutar 00:00 tanpa sebab.
+            if (halaman.isEmpty()) {
+                throw Exception("Tidak ada tautan video langsung untuk episode ini.")
+            }
+            halaman
         }
         .subscribeOn(Schedulers.io())
 

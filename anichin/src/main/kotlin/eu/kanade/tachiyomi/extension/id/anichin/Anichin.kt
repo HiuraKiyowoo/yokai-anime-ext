@@ -350,7 +350,13 @@ class Anichin : HttpSource() {
                 if (!u.isNullOrBlank()) hasil += u
                 if (hasil.size >= 3) break // cukup beberapa pilihan
             }
-            hasil.mapIndexed { i, u -> Page(i, u) }
+            hasil.mapIndexed { i, u -> Page(i, u) }.ifEmpty {
+                // Sejak mirror Dailymotion (player.nunadrama.sbs) balas 404, tinggal
+                // ok.ru/Streamruby yang hidup. Kalau tak satu pun menghasilkan tautan,
+                // lemparkan kesalahan supaya aplikasi menampilkan pesan alih-alih
+                // membuka pemutar kosong.
+                throw Exception("Tidak ada server yang bisa diputar untuk episode ini.")
+            }
         }
         .subscribeOn(Schedulers.io())
 }
