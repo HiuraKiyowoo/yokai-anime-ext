@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.extension.id.kuramanime
 
+import eu.kanade.tachiyomi.source.model.Filter
 import eu.kanade.tachiyomi.source.model.FilterList
 import eu.kanade.tachiyomi.source.model.MangasPage
 import eu.kanade.tachiyomi.source.model.Page
@@ -95,6 +96,36 @@ private class DohKuramanime : Dns {
     }
 }
 
+/** Satu dropdown = satu parameter GET (mis. `order_by`, `genre`). */
+private class Pilih(
+    nama: String,
+    val param: String,
+    val pasangan: List<Pair<String, String>>,
+    bawaan: Int = 0,
+) : Filter.Select<String>(nama, pasangan.map { it.second }.toTypedArray(), bawaan) {
+    val nilai: String get() = pasangan.getOrNull(state)?.first.orEmpty()
+}
+
+/** Nilai sah dari `<select name="order_by">` di /anime (terukur 12 Nov 2026). */
+private val URUTAN = listOf(
+    "most_viewed" to "Terpopuler",
+    "updated" to "Terupdate",
+    "latest" to "Terbaru",
+    "popular" to "Teratas",
+    "oldest" to "Terlama",
+    "ascending" to "Judul A–Z",
+    "descending" to "Judul Z–A",
+    "text" to "Mode Teks",
+)
+
+/** Genre lewat jalur /properties/genre/<slug>. 30 slug ini diuji hidup (2 mati: game, thriller). */
+private val GENRE = listOf("" to "Semua") + listOf(
+    "action", "adventure", "comedy", "demons", "drama", "ecchi", "fantasy", "harem",
+    "historical", "horror", "josei", "magic", "martial-arts", "mecha", "military", "music",
+    "mystery", "psychological", "romance", "school", "sci-fi", "seinen", "shoujo", "shounen",
+    "slice-of-life", "space", "sports", "super-power", "supernatural", "vampire",
+).map { it to it.split("-").joinToString(" ") { k -> k.replaceFirstChar { c -> c.uppercase() } } }
+
 class Kuramanime : HttpSource() {
 
     override val name = "Kuramanime"
@@ -165,21 +196,33 @@ class Kuramanime : HttpSource() {
     private fun seriDari(url: String): String =
         url.substringBefore("/episode/").trimEnd('/') + "/"
 
-    private fun alamatList(page: Int) = "$baseUrl/quick/ongoing?page=$page"
+    /**
+     * Arsip `/anime` punya urutan asli situs — terbaca dari `<select name="order_by">`:
+     * most_viewed (Terpopuler), updated (Terupdate), latest (Terbaru), popular (Teratas),
+     * oldest (Terlama), ascending/descending (A-Z/Z-A), text (Mode Teks).
+     *
+     * Sebelumnya modul ini hanya memakai `/quick/ongoing` — satu-satunya urutan yang dipakai
+     * untuk SEMUA tab, sehingga tab Populer dan Terbaru isinya kembar persis.
+     * Terukur: most_viewed → One Piece/Kaihuku Jutsushi…, updated → Shixiong A Shixiong…, beda.
+     */
+    private fun alamatList(page: Int, urut: String = "updated", genre: String = ""): String =
+        if (genre.isBlank()) {
+            "$baseUrl/anime?page=$page&order_by=$urut"
+        } else {
+            "$baseUrl/properties/genre/$genre?page=$page"
+        }
+
+    private fun daftarArsip(page: Int, urut: String, genre: String = ""): MangasPage {
+        val isi = dariKartu(doc(alamatList(page, urut, genre)))
+        return MangasPage(isi, isi.isNotEmpty())
+    }
 
     override fun fetchPopularManga(page: Int): Observable<MangasPage> = Observable
-        .fromCallable {
-            // Kuramanime hanya punya satu urutan daftar (menurut pembaruan) — dipakai untuk keduanya.
-            val isi = dariKartu(doc(alamatList(page), ajax = true))
-            MangasPage(isi, isi.isNotEmpty())
-        }
+        .fromCallable { daftarArsip(page, "most_viewed") }
         .subscribeOn(Schedulers.io())
 
     override fun fetchLatestUpdates(page: Int): Observable<MangasPage> = Observable
-        .fromCallable {
-            val isi = dariKartu(doc(alamatList(page), ajax = true))
-            MangasPage(isi, isi.isNotEmpty())
-        }
+        .fromCallable { daftarArsip(page, "updated") }
         .subscribeOn(Schedulers.io())
 
     override fun fetchSearchManga(
@@ -189,6 +232,20 @@ class Kuramanime : HttpSource() {
     ): Observable<MangasPage> = Observable
         .fromCallable {
             val q = URLEncoder.encode(query.trim(), "UTF-8")
+            val pilih = filters.filterIsInstance<Pilih>().associate { it.param to it.nilai }
+            val urut = pilih["order_by"].orEmpty().ifBlank { "most_viewed" }
+            val genre = pilih["genre"].orEmpty()
+
+            // /anime?search= memakai kartu yang sama dengan arsip, jadi Urutkan & Genre ikut jalan.
+            val alamat = if (genre.isBlank()) {
+                "$baseUrl/anime?search=$q&page=$page&order_by=$urut"
+            } else {
+                "$baseUrl/properties/genre/$genre?search=$q&page=$page"
+            }
+            val dariArsip = runCatching { dariKartu(doc(alamat)) }.getOrDefault(emptyList())
+            if (dariArsip.isNotEmpty()) return@fromCallable MangasPage(dariArsip, dariArsip.size >= 18)
+
+            // Cadangan (tanpa filter): saran judul milik situs lewat /quicksearch/get.
             val mentah = ambil("$baseUrl/quicksearch/get?q=$q", ajax = true)
             val html = runCatching { JSONObject(mentah).optString("html") }.getOrDefault("")
             val d = Jsoup.parse(html, baseUrl)
@@ -437,7 +494,12 @@ class Kuramanime : HttpSource() {
         }
         .subscribeOn(Schedulers.io())
 
-    override fun getFilterList(): FilterList = FilterList()
+    override fun getFilterList(): FilterList = FilterList(
+        listOf<Filter<*>>(
+            Pilih("Urutkan", "order_by", URUTAN),
+            Pilih("Genre", "genre", GENRE),
+        ),
+    )
 
     companion object {
         // Nilai dari env situs (MIX_*) — statis per deploy. Kalau situs ganti versi,

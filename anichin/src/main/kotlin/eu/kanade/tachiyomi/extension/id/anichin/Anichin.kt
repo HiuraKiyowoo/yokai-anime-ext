@@ -1,6 +1,8 @@
 package eu.kanade.tachiyomi.extension.id.anichin
 
 import android.util.Base64
+import eu.kanade.tachiyomi.source.model.Filter
+import eu.kanade.tachiyomi.source.model.FilterList
 import eu.kanade.tachiyomi.source.model.MangasPage
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.model.SChapter
@@ -14,6 +16,7 @@ import org.jsoup.nodes.Document
 import org.jsoup.parser.Parser
 import rx.Observable
 import rx.schedulers.Schedulers
+import java.net.URLEncoder
 
 /**
  * Anichin (anichin.moe) — donghua sub Indo.
@@ -47,6 +50,62 @@ import rx.schedulers.Schedulers
 private const val PROYEK = "https://anichin.moe"
 private const val UA = "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 " +
     "(KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+
+/** Satu dropdown = satu parameter GET di form /anime (mis. `status`, `type`, `order`). */
+private class Pilih(
+    nama: String,
+    val param: String,
+    val pasangan: List<Pair<String, String>>,
+    bawaan: Int = 0,
+) : Filter.Select<String>(nama, pasangan.map { it.second }.toTypedArray(), bawaan) {
+    val nilai: String get() = pasangan.getOrNull(state)?.first.orEmpty()
+}
+
+/**
+ * Nilai filter diambil langsung dari form milik situs
+ * (`<form action="/anime" class="filters">`): radio status/type/sub/order + checkbox genre[].
+ */
+private val URUTAN = listOf(
+    "update" to "Terbaru",
+    "popular" to "Terpopuler",
+    "rating" to "Rating",
+    "latest" to "Rilis terbaru",
+    "title" to "Judul A–Z",
+    "titlereverse" to "Judul Z–A",
+)
+
+private val STATUS = listOf(
+    "" to "Semua",
+    "ongoing" to "Ongoing",
+    "completed" to "Completed",
+    "upcoming" to "Upcoming",
+    "hiatus" to "Hiatus",
+)
+
+private val TIPE = listOf(
+    "" to "Semua",
+    "tv" to "TV",
+    "ona" to "ONA",
+    "ova" to "OVA",
+    "movie" to "Movie",
+    "donghua" to "Donghua",
+    "special" to "Special",
+    "bd" to "BD",
+    "live action" to "Live Action",
+    "music" to "Music",
+)
+
+private val SUB = listOf("" to "Semua", "sub" to "Sub", "dub" to "Dub", "raw" to "Raw")
+
+/** Nilai `genre[]` dari form situs (duplikat seperti actions/adven dibuang). */
+private val GENRE = listOf("" to "Semua") + listOf(
+    "action", "adventure", "blood", "comedy", "crossdressing", "cultivation", "demons", "drama",
+    "ecchi", "fantasy", "friendship", "game", "gore", "gourmet", "guoman", "harem", "historical",
+    "horror", "isekai", "life", "magic", "martial-arts", "mecha", "military", "music", "mystery",
+    "psychological", "reincarnation", "romance", "school", "sci-fi", "shoujo", "shounen",
+    "slice-of-life", "space", "sports", "super-power", "supernatural", "suspense", "thriller",
+    "time-travel", "urban-fantasy", "vampire", "video-game", "youth",
+).map { it to it.split("-").joinToString(" ") { k -> k.replaceFirstChar { c -> c.uppercase() } } }
 
 class Anichin : HttpSource() {
 
@@ -103,36 +162,65 @@ class Anichin : HttpSource() {
 
     // --- Katalog ------------------------------------------------------------
 
-    // "Terpopuler Hari Ini" ada di slider beranda (div.popconslide); sisanya
-    // daftar biasa. Halaman arsip: /page/N/.
-    override fun fetchPopularManga(page: Int): Observable<MangasPage> = Observable
-        .fromCallable {
-            val d = doc(if (page <= 1) "$PROYEK/" else "$PROYEK/page/$page/")
-            val isi = dariKartu(d).ifEmpty { dariKartu(d) }
-            MangasPage(isi, isi.isNotEmpty())
+    /**
+     * Arsip `/anime/` punya form filternya sendiri: `?status=&type=&sub=&order=&genre[]=` dengan
+     * halaman berikutnya di `/anime/page/N/?<param>`. Urutan asli yang terbukti berbeda:
+     * popular (Perfect World, Soul Land) vs update (The Guardian of Daxia) vs rating (BTTH Movie).
+     *
+     * Sebelumnya modul ini memakai beranda untuk KEDUA tab (`$PROYEK/` + `/page/N/`) sehingga
+     * daftar Populer dan Terbaru kembar persis.
+     */
+    private fun paramDari(filters: FilterList): List<String> = filters
+        .filterIsInstance<Pilih>()
+        .mapNotNull { f ->
+            val v = f.nilai
+            if (v.isBlank()) null else "${f.param}=${URLEncoder.encode(v, "UTF-8")}"
         }
+
+    private fun alamatArsip(page: Int, param: List<String>): String {
+        val q = param.joinToString("&")
+        val dasar = if (page <= 1) "$PROYEK/anime/" else "$PROYEK/anime/page/$page/"
+        return if (q.isEmpty()) dasar else "$dasar?$q"
+    }
+
+    private fun dariArsip(page: Int, param: List<String>): MangasPage {
+        val isi = dariKartu(doc(alamatArsip(page, param)))
+        return MangasPage(isi, isi.isNotEmpty())
+    }
+
+    override fun fetchPopularManga(page: Int): Observable<MangasPage> = Observable
+        .fromCallable { dariArsip(page, listOf("status=", "type=", "order=popular")) }
         .subscribeOn(Schedulers.io())
 
     override fun fetchLatestUpdates(page: Int): Observable<MangasPage> = Observable
-        .fromCallable {
-            val d = doc(if (page <= 1) "$PROYEK/" else "$PROYEK/page/$page/")
-            val isi = dariKartu(d)
-            MangasPage(isi, isi.isNotEmpty())
-        }
+        .fromCallable { dariArsip(page, listOf("status=", "type=", "order=update")) }
         .subscribeOn(Schedulers.io())
 
-    override fun fetchSearchManga(page: Int, query: String, filters: eu.kanade.tachiyomi.source.model.FilterList): Observable<MangasPage> = Observable
+    override fun fetchSearchManga(page: Int, query: String, filters: FilterList): Observable<MangasPage> = Observable
         .fromCallable {
-            val q = java.net.URLEncoder.encode(query.trim(), "UTF-8")
+            val q = URLEncoder.encode(query.trim(), "UTF-8")
+            // Pencarian memakai halaman `?s=` milik situs; parameter filter diikutkan
+            // (kalau tidak didukung, WordPress mengabaikannya).
+            val param = paramDari(filters)
             val alamat = if (page <= 1) {
-                "$PROYEK/?s=$q"
+                "$PROYEK/?s=$q" + if (param.isEmpty()) "" else "&" + param.joinToString("&")
             } else {
-                "$PROYEK/page/$page/?s=$q"
+                "$PROYEK/page/$page/?s=$q" + if (param.isEmpty()) "" else "&" + param.joinToString("&")
             }
             val isi = dariKartu(doc(alamat))
             MangasPage(isi, isi.isNotEmpty())
         }
         .subscribeOn(Schedulers.io())
+
+    override fun getFilterList(): FilterList = FilterList(
+        listOf<Filter<*>>(
+            Pilih("Urutkan", "order", URUTAN),
+            Pilih("Status", "status", STATUS),
+            Pilih("Tipe", "type", TIPE),
+            Pilih("Sub", "sub", SUB),
+            Pilih("Genre", "genre[]", GENRE),
+        ),
+    )
 
     // --- Detail & daftar episode -------------------------------------------
 

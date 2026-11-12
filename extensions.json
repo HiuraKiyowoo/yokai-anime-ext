@@ -112,10 +112,10 @@
     "module": "anichin",
     "pkg": "eu.kanade.tachiyomi.extension.id.anichin",
     "lang": "id",
-    "code": 4,
-    "version": "1.4.3",
+    "code": 5,
+    "version": "1.4.4",
     "nsfw": 0,
-    "sumber": "HTML scraping + ok.ru (HLS/MP4) & Streamruby",
+    "sumber": "HTML scraping + ok.ru (HLS/MP4) & Streamruby + arsip /anime (order=popular|update|rating) + filter Status/Tipe/Sub/Genre",
     "sources": [
       {
         "name": "Anichin",
@@ -130,10 +130,10 @@
     "module": "kuramanime",
     "pkg": "eu.kanade.tachiyomi.extension.id.kuramanime",
     "lang": "id",
-    "code": 3,
-    "version": "1.4.2",
+    "code": 4,
+    "version": "1.4.3",
     "nsfw": 0,
-    "sumber": "HTML Kuramanime; alur 3 langkah (CSRF + token halaman + POST authorization) menghasilkan <source> .my.id/kdrive/*.mp4 (HTTP 206, Range) + cadangan DNS-over-HTTPS (ISP Indonesia memblokir DNS *.kuramanime.ing)",
+    "sumber": "HTML Kuramanime; alur 3 langkah (CSRF + token halaman + POST authorization) menghasilkan <source> .my.id/kdrive/*.mp4 (HTTP 206, Range) + filter Urutkan (most_viewed/updated/…) & Genre (/properties/genre/<slug>) + cadangan DNS-over-HTTPS",
     "sources": [
       {
         "name": "Kuramanime",
