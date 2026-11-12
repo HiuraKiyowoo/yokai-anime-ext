@@ -225,7 +225,7 @@ class Cosplaytele : HttpSource() {
                     chapter_number = 1f
                 }
             }
-            daftar
+            daftar.toList()
         }
         .subscribeOn(Schedulers.io())
 
