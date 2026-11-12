@@ -246,11 +246,23 @@ class Kuramanime : HttpSource() {
      * meminta jalur itu (Referer = halaman embed) mengembalikan dasar URL MP4,
      * lalu tinggal ditempeli 10 karakter acak + token. Terbukti balas 206 video/mp4.
      */
+    /** GET dengan Referer khusus (dipakai alur embed DoodStream). */
+    private fun teksReferer(url: String, referer: String): String = client.newCall(
+        Request.Builder().url(url)
+            .header("User-Agent", ua)
+            .header("Accept-Language", "id-ID,id;q=0.9")
+            .header("Referer", referer)
+            .build(),
+    ).execute().use { r ->
+        if (!r.isSuccessful) throw Exception("Kuramanime: HTTP ${r.code} untuk $url")
+        r.body?.string().orEmpty()
+    }
+
     private fun dariDood(embed: String): String? {
         val host = embed.substringBefore("/e").ifBlank { return null }
-        val html = runCatching { teks(embed, referer = "$baseUrl/") }.getOrNull() ?: return null
+        val html = runCatching { teksReferer(embed, "$baseUrl/") }.getOrNull() ?: return null
         val jalur = Regex("""/pass_md5/[^"'<>\\]+""").find(html)?.value ?: return null
-        val dasar = runCatching { teks("$host$jalur", referer = embed).trim() }.getOrNull() ?: return null
+        val dasar = runCatching { teksReferer("$host$jalur", embed).trim() }.getOrNull() ?: return null
         if (dasar.length < 30 || !dasar.startsWith("http")) return null
         val token = jalur.substringAfterLast('-')
         val acak = (1..10)
@@ -355,14 +367,14 @@ class Kuramanime : HttpSource() {
                 if (semua.keys.any { hidup(it) }) break
             }
 
-            val daftar = semua.entries.toList()
-            if (daftar.size <= 1) return@fromCallable daftar.mapIndexed { i, e -> Page(i, e.key) }
+            val daftar = semua.entries.map { it.key to it.value }
+            if (daftar.size <= 1) return@fromCallable daftar.mapIndexed { i, e -> Page(i, e.first) }
 
             // tautan hidup dulu + kualitas tertinggi lebih awal
-            val (nyala, mati) = daftar.partition { hidup(it.key) }
+            val (nyala, mati) = daftar.partition { hidup(it.first) }
             val urut = { e: Pair<String, String> -> e.second.filter { c -> c.isDigit() }.toIntOrNull() ?: 0 }
             (nyala.sortedByDescending(urut) + mati.sortedByDescending(urut))
-                .mapIndexed { i, e -> Page(i, e.key) }
+                .mapIndexed { i, e -> Page(i, e.first) }
         }
         .subscribeOn(Schedulers.io())
 
