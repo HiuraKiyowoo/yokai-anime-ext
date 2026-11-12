@@ -51,7 +51,7 @@ private class Pilih(
     val param: String,
     val pasangan: List<Pair<String, String>>,
     bawaan: Int = 0,
-) : SelectFilter(nama, pasangan.map { it.second }.toTypedArray(), bawaan) {
+) : Filter.Select<String>(nama, pasangan.map { it.second }.toTypedArray(), bawaan) {
     val nilai: String get() = pasangan.getOrNull(state)?.first.orEmpty()
 }
 

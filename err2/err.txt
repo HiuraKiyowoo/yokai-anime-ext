@@ -1,0 +1,89 @@
+===== awal =====
+Downloading https://services.gradle.org/distributions/gradle-8.14.4-bin.zip
+.............10%.............20%.............30%.............40%.............50%.............60%.............70%.............80%.............90%..............100%
+
+Welcome to Gradle 8.14.4!
+
+Here are the highlights of this release:
+ - Java 24 support
+ - GraalVM Native Image toolchain selection
+ - Enhancements to test reporting
+ - Build Authoring improvements
+
+For more details see https://docs.gradle.org/8.14.4/release-notes.html
+
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.14.4/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Type-safe project accessors is an incubating feature.
+> Task :yokai:buildSrc:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :yokai:buildSrc:generateExternalPluginSpecBuilders
+> Task :yokai:buildSrc:extractPrecompiledScriptPluginPlugins
+> Task :yokai:buildSrc:generateScriptPluginAdapters
+> Task :yokai:buildSrc:pluginDescriptors
+> Task :yokai:buildSrc:processResources
+> Task :yokai:buildSrc:compilePluginsBlocks
+> Task :yokai:buildSrc:generatePrecompiledScriptPluginAccessors
+
+> Task :yokai:buildSrc:compileKotlin
+w: file:///home/runner/work/yokai-anime-ext/yokai-anime-ext/yokai/buildSrc/src/main/kotlin/yokai/build/ProjectExtensions.kt:74:51 'OptimizeNonSkippingGroups: ComposeFeatureFlag' is deprecated. This flag should be enabled by default and will be removed in the future versions.
+
+> Task :yokai:buildSrc:compileJava NO-SOURCE
+> Task :yokai:buildSrc:compileGroovy NO-SOURCE
+> Task :yokai:buildSrc:classes
+> Task :yokai:buildSrc:jar
+
+> Configure project :yokai:app
+w: file:///home/runner/work/yokai-anime-ext/yokai-anime-ext/yokai/app/build.gradle.kts:133:13: 'resourceConfigurations: MutableSet<String>' is deprecated. Support for resource configurations will be removed. For language resource configurations in applications, use androidResources.localeFilters.
+w: file:///home/runner/work/yokai-anime-ext/yokai-anime-ext/yokai/app/build.gradle.kts:133:13: 'resourceConfigurations: MutableSet<String>' is deprecated. Support for resource configurations will be removed. For language resource configurations in applications, use androidResources.localeFilters.
+w: file:///home/runner/work/yokai-anime-ext/yokai-anime-ext/yokai/app/build.gradle.kts:134:13: 'resourceConfigurations: MutableSet<String>' is deprecated. Support for resource configurations will be removed. For language resource configurations in applications, use androidResources.localeFilters.
+w: file:///home/runner/work/yokai-anime-ext/yokai-anime-ext/yokai/app/build.gradle.kts:134:13: 'resourceConfigurations: MutableSet<String>' is deprecated. Support for resource configurations will be removed. For language resource configurations in applications, use androidResources.localeFilters.
+
+The Kotlin Gradle plugin was loaded multiple times in different subprojects, which is not supported and may break the build. 
+===== What went wrong =====
+* What went wrong:
+Execution failed for task ':hentaicop:compileReleaseKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.btapi.BuildToolsApiCompilationWork
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+* Exception is:
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':hentaicop:compileReleaseKotlin'.
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:130)
+	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:293)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:128)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:116)
+	at org.gradle.api.internal.tasks.execution.ProblemsTaskPathTrackingTaskExecuter.execute(ProblemsTaskPathTrackingTaskExecuter.java:41)
+	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
+	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
+	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
+	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:74)
+	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
+===== error =====
+492489:w: file:///home/runner/work/yokai-anime-ext/yokai-anime-ext/wibutime/src/main/kotlin/eu/kanade/tachiyomi/extension/id/wibutime/Wibutime.kt:218:39 Cannot access 'eu.kanade.tachiyomi.network.ProgressListener' which is a supertype of 'Page'. This may be forbidden soon. Check the module classpath for missing or conflicting dependencies.
+492494:e: file:///home/runner/.gradle/caches/8.14.4/transforms/2de8f15d362b0a9313e30655cf40e5d1/transformed/out/jars/classes.jar!/META-INF/Yokai.core_main_release.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.4.0, expected version is 2.2.0.
+492495:e: file:///home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.4.10/8943c84ddc6d5cc00a10dbc3736c397066eeaab5/kotlin-stdlib-2.4.10.jar!/META-INF/kotlin-stdlib-jdk8.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.4.0, expected version is 2.2.0.
+492496:e: file:///home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.4.10/8943c84ddc6d5cc00a10dbc3736c397066eeaab5/kotlin-stdlib-2.4.10.jar!/META-INF/kotlin-stdlib.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.4.0, expected version is 2.2.0.
+492497:e: file:///home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.4.10/8943c84ddc6d5cc00a10dbc3736c397066eeaab5/kotlin-stdlib-2.4.10.jar!/META-INF/kotlin-stdlib-jdk7.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.4.0, expected version is 2.2.0.
+492498:e: file:///home/runner/work/yokai-anime-ext/yokai-anime-ext/yokai/source/api/build/tmp/kotlin-classes/release/META-INF/Yokai.source_api_release.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.4.0, expected version is 2.2.0.
+492507:w: file:///home/runner/work/yokai-anime-ext/yokai-anime-ext/animein/src/main/kotlin/eu/kanade/tachiyomi/extension/id/animein/Animein.kt:198:47 Cannot access 'eu.kanade.tachiyomi.network.ProgressListener' which is a supertype of 'Page'. This may be forbidden soon. Check the module classpath for missing or conflicting dependencies.
+495243:w: file:///home/runner/work/yokai-anime-ext/yokai-anime-ext/animelovers/src/main/kotlin/eu/kanade/tachiyomi/extension/id/animelovers/Animelovers.kt:225:50 Cannot access 'eu.kanade.tachiyomi.network.ProgressListener' which is a supertype of 'Page'. This may be forbidden soon. Check the module classpath for missing or conflicting dependencies.
+495254:w: file:///home/runner/work/yokai-anime-ext/yokai-anime-ext/otakudesu/src/main/kotlin/eu/kanade/tachiyomi/extension/id/otakudesu/Otakudesu.kt:230:39 Cannot access 'eu.kanade.tachiyomi.network.ProgressListener' which is a supertype of 'Page'. This may be forbidden soon. Check the module classpath for missing or conflicting dependencies.
+497921:e: file:///home/runner/work/yokai-anime-ext/yokai-anime-ext/hentaicop/src/main/kotlin/eu/kanade/tachiyomi/extension/id/hentaicop/HentaiCop.kt:54:5 Unresolved reference 'SelectFilter'.
+497922:e: file:///home/runner/work/yokai-anime-ext/yokai-anime-ext/hentaicop/src/main/kotlin/eu/kanade/tachiyomi/extension/id/hentaicop/HentaiCop.kt:55:50 Unresolved reference 'state'.
+497923:e: file:///home/runner/work/yokai-anime-ext/yokai-anime-ext/hentaicop/src/main/kotlin/eu/kanade/tachiyomi/extension/id/hentaicop/HentaiCop.kt:135:17 Argument type mismatch: actual type is 'Pilih', but 'Filter<*>' was expected.
+497924:e: file:///home/runner/work/yokai-anime-ext/yokai-anime-ext/hentaicop/src/main/kotlin/eu/kanade/tachiyomi/extension/id/hentaicop/HentaiCop.kt:136:17 Argument type mismatch: actual type is 'Pilih', but 'Filter<*>' was expected.
+497925:e: file:///home/runner/work/yokai-anime-ext/yokai-anime-ext/hentaicop/src/main/kotlin/eu/kanade/tachiyomi/extension/id/hentaicop/HentaiCop.kt:137:17 Argument type mismatch: actual type is 'Pilih', but 'Filter<*>' was expected.
+497926:e: file:///home/runner/work/yokai-anime-ext/yokai-anime-ext/hentaicop/src/main/kotlin/eu/kanade/tachiyomi/extension/id/hentaicop/HentaiCop.kt:138:17 Argument type mismatch: actual type is 'Pilih', but 'Filter<*>' was expected.
+497927:e: file:///home/runner/work/yokai-anime-ext/yokai-anime-ext/hentaicop/src/main/kotlin/eu/kanade/tachiyomi/extension/id/hentaicop/HentaiCop.kt:139:17 Argument type mismatch: actual type is 'Pilih', but 'Filter<*>' was expected.
+497928:e: file:///home/runner/work/yokai-anime-ext/yokai-anime-ext/hentaicop/src/main/kotlin/eu/kanade/tachiyomi/extension/id/hentaicop/HentaiCop.kt:140:17 Argument type mismatch: actual type is 'Pilih', but 'Filter<*>' was expected.
+497929:e: file:///home/runner/work/yokai-anime-ext/yokai-anime-ext/hentaicop/src/main/kotlin/eu/kanade/tachiyomi/extension/id/hentaicop/HentaiCop.kt:141:17 Argument type mismatch: actual type is 'Pilih', but 'Filter<*>' was expected.
+497938:w: file:///home/runner/work/yokai-anime-ext/yokai-anime-ext/nontonhentai/src/main/kotlin/eu/kanade/tachiyomi/extension/id/nontonhentai/NontonHentai.kt:191:40 Cannot access 'eu.kanade.tachiyomi.network.ProgressListener' which is a supertype of 'Page'. This may be forbidden soon. Check the module classpath for missing or conflicting dependencies.
+497943:FAILURE: Build failed with an exception.
