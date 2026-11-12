@@ -94,10 +94,10 @@
     "module": "hentaicop",
     "pkg": "eu.kanade.tachiyomi.extension.id.hentaicop",
     "lang": "id",
-    "code": 3,
-    "version": "1.4.2",
+    "code": 4,
+    "version": "1.5.0",
     "nsfw": 1,
-    "sumber": "WP REST + pemutar sendiri /play/v/ (HLS CDN jav.*.site)",
+    "sumber": "WP REST + pemutar /play/v/ (HLS CDN jav.*.site / *.my.id) + filter /series/",
     "sources": [
       {
         "name": "HentaiCop",

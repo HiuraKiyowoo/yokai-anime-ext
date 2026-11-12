@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.extension.id.hentaicop
 
+import eu.kanade.tachiyomi.source.model.Filter
+import eu.kanade.tachiyomi.source.model.FilterList
 import eu.kanade.tachiyomi.source.model.MangasPage
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.model.SChapter
@@ -7,10 +9,12 @@ import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.online.HttpSource
 import okhttp3.Request
 import org.json.JSONArray
+import org.json.JSONObject
 import org.jsoup.Jsoup
 import org.jsoup.parser.Parser
 import rx.Observable
 import rx.schedulers.Schedulers
+import java.net.URLEncoder
 
 /**
  * HentaiCop (hentaicop.com) — NSFW.
@@ -19,20 +23,37 @@ import rx.schedulers.Schedulers
  * saja — comment_count & rand ditolak 400) dan API milik situs /wp-json/hc/v1/.
  *
  * Stream: halaman post -> <iframe src="/play/v/<id>/?q=720">
- *         -> halaman pemutar memuat URL HLS di CDN jav.<hash>.site:
- *            /hls/jav/<kode>/<KODE-XX>_720p.mp4/index-v1-a1.m3u8?md5=..&expires=..
+ *         -> halaman pemutar memuat URL HLS di CDN <host>.my.id / jav.<hash>.site:
+ *            /hls/.../<judul>_720p.mp4/index-v1-a1.m3u8?md5=..&expires=..
  *
- * DUA GERBANG WAJIB, kalau tidak: 403 "Akses ditolak: Fake Referer terdeteksi."
+ * DUA GERBANG WAJIB di halaman pemutar, kalau tidak: 403 "Fake Referer terdeteksi."
  *   1. Referer = URL halaman episode itu sendiri (bukan beranda)
  *   2. Accept-Language harus terisi (mis. "id-ID,id;q=0.9")
+ *
+ * .m3u8-nya sendiri punya gerbang berbeda dan **per host**: sebagian host membalas
+ * 200 tanpa Referer, sebagian WAJIB ber-Referer (terukur: host 9385b44e..site →
+ * 403 tanpa Referer, 200 dengan "Referer: https://hentaicop.com/"). Karena pemutar
+ * memakai header milik ekstensi ini (Referer beranda), keduanya aman. Tanpa
+ * Referer sama sekali pemutar menampilkan durasi 00:00 dan tidak pernah mulai.
  *
  * Jebakan lain: "&" pada URL .m3u8 di halaman ter-escape jadi "&#038;" — wajib
  * di-unescape. Poster tidak ada di REST (featured_media 0, og:image = fav.webp),
  * jadi diambil dari gambar /wp-content/uploads/ pertama di halaman episode.
  */
 private const val PROYEK = "https://hentaicop.com"
-private const val UA = "Mozilla/5.0 (Linux; Android 14; AppleWebKit/537.36 " +
+private const val UA = "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 " +
     "(KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+private const val AL = "id-ID,id;q=0.9,en;q=0.8"
+
+/** Satu dropdown = satu parameter GET di /series/ (mis. genre, studio, tahun). */
+private class Pilih(
+    nama: String,
+    val param: String,
+    val pasangan: List<Pair<String, String>>,
+    bawaan: Int = 0,
+) : SelectFilter(nama, pasangan.map { it.second }.toTypedArray(), bawaan) {
+    val nilai: String get() = pasangan.getOrNull(state)?.first.orEmpty()
+}
 
 class HentaiCop : HttpSource() {
 
@@ -45,19 +66,108 @@ class HentaiCop : HttpSource() {
     // jadi CDN HentaiCop tidak lagi membalas 403 saat memutar .m3u8.
     override fun headersBuilder() = super.headersBuilder()
         .add("User-Agent", UA)
-        .add("Accept-Language", "id-ID,id;q=0.9,en;q=0.8")
+        .add("Accept-Language", AL)
         .add("Referer", "$PROYEK/")
 
     // --- HTTP ---------------------------------------------------------------
 
     private fun teks(url: String, referer: String? = null): String {
         val b = Request.Builder().url(url).header("User-Agent", UA)
-            .header("Accept-Language", "id-ID,id;q=0.9,en;q=0.8")
+            .header("Accept-Language", AL)
         referer?.let { b.header("Referer", it) }
         return client.newCall(b.build()).execute().use { r ->
             if (!r.isSuccessful) throw Exception("HentaiCop: HTTP ${r.code} untuk $url")
             r.body.string()
         }
+    }
+
+    /** Probe ringan: 200/206/416 = berkas ada (416 = rentang di luar, artinya hidup). */
+    private fun hidup(url: String): Boolean = runCatching {
+        val b = Request.Builder().url(url)
+            .header("User-Agent", UA)
+            .header("Accept-Language", AL)
+            .header("Referer", "$PROYEK/")
+            .header("Range", "bytes=0-1023")
+        client.newCall(b.build()).execute().use { it.isSuccessful || it.code == 416 }
+    }.getOrDefault(false)
+
+    // --- Filter -------------------------------------------------------------
+
+    private var kueFilter: JSONObject? = null
+    private var waktuKue = 0L
+
+    private fun filterJson(): JSONObject {
+        val sekarang = System.currentTimeMillis()
+        val tersimpan = kueFilter
+        if (tersimpan != null && sekarang - waktuKue < 6 * 3600_000L) return tersimpan
+        val baru = runCatching { JSONObject(teks("$PROYEK/wp-json/hc/v1/filters")) }.getOrNull()
+        if (baru != null) {
+            kueFilter = baru
+            waktuKue = sekarang
+            return baru
+        }
+        return tersimpan ?: JSONObject()
+    }
+
+    private fun opsi(json: JSONObject, kunci: String, semua: Boolean = true): List<Pair<String, String>> {
+        val arr = json.optJSONArray(kunci) ?: JSONArray()
+        val hasil = (0 until arr.length()).mapNotNull { i ->
+            val o = arr.optJSONObject(i) ?: return@mapNotNull null
+            val v = o.optString("v")
+            if (v.isBlank()) null else v to o.optString("l").ifBlank { v }
+        }
+        return if (semua) listOf("" to "Semua") + hasil else hasil
+    }
+
+    override fun getFilterList(): FilterList {
+        val o = filterJson().optJSONObject("options") ?: JSONObject()
+        val urut = opsi(o, "order", semua = false).ifEmpty {
+            listOf(
+                "latest" to "Terbaru",
+                "update" to "Update terbaru",
+                "popular" to "Terpopuler",
+                "rating" to "Rating",
+                "title" to "Judul A–Z",
+            )
+        }
+        return FilterList(
+            listOf<Filter<*>>(
+                Pilih("Genre", "genre", opsi(o, "genre")),
+                Pilih("Studio", "studio", opsi(o, "studio")),
+                Pilih("Tipe", "type", opsi(o, "type")),
+                Pilih("Sensor", "sensor", opsi(o, "sensor")),
+                Pilih("Status", "status", opsi(o, "status")),
+                Pilih("Tahun", "tahun", opsi(o, "tahun")),
+                Pilih("Urutkan", "order", urut),
+            ),
+        )
+    }
+
+    private fun params(filters: FilterList): List<String> = filters
+        .filterIsInstance<Pilih>()
+        .mapNotNull { f ->
+            val v = f.nilai
+            if (v.isBlank()) null else "${f.param}=${URLEncoder.encode(v, "UTF-8")}"
+        }
+
+    /** Arsip HTML: /series/?<params> · halaman berikutnya /series/page/N/?<params>. */
+    private fun dariArsip(page: Int, param: List<String>): MangasPage {
+        val q = if (param.isEmpty()) "" else "?" + param.joinToString("&")
+        val alamat = if (page <= 1) "$PROYEK/series/$q" else "$PROYEK/series/page/$page/$q"
+        val doc = Jsoup.parse(teks(alamat), alamat)
+        val isi = doc.select("article.ht-card").mapNotNull { kartu ->
+            val a = kartu.selectFirst("h2.ht-card__title a[href]") ?: kartu.selectFirst("a[href]")
+            ?: return@mapNotNull null
+            val url = a.absUrl("href").ifBlank { a.attr("href") }
+            if (url.isBlank()) return@mapNotNull null
+            SManga.create().apply {
+                this.url = url.removePrefix(PROYEK)
+                title = bersih(kartu.selectFirst("h2")?.text().orEmpty()).ifBlank { a.text().trim() }
+                thumbnail_url = kartu.selectFirst("img[src]")?.absUrl("src")?.ifBlank { null }
+                initialized = false
+            }
+        }.distinctBy { it.url }
+        return MangasPage(isi, isi.isNotEmpty())
     }
 
     // --- Katalog ------------------------------------------------------------
@@ -90,13 +200,18 @@ class HentaiCop : HttpSource() {
         .fromCallable { halaman("date", page) }
         .subscribeOn(Schedulers.io())
 
-    override fun fetchSearchManga(page: Int, query: String, filters: eu.kanade.tachiyomi.source.model.FilterList): Observable<MangasPage> = Observable
+    override fun fetchSearchManga(page: Int, query: String, filters: FilterList): Observable<MangasPage> = Observable
         .fromCallable {
             val kunci = query.trim()
+            val param = params(filters).toMutableList()
+            // Pencarian judul situs (param "s") hanya jalan mulai 3 huruf.
+            if (kunci.length >= 3) param += "s=${URLEncoder.encode(kunci, "UTF-8")}"
+
+            if (param.isNotEmpty()) return@fromCallable dariArsip(page, param)
             if (kunci.isBlank() || page > 1) return@fromCallable halaman("date", page)
-            val o = org.json.JSONObject(
-                teks("$PROYEK/wp-json/hc/v1/suggest?q=${java.net.URLEncoder.encode(kunci, "UTF-8")}"),
-            )
+
+            // Tanpa filter: pakai saran judul dari situs (lebih akurat daripada WP search).
+            val o = JSONObject(teks("$PROYEK/wp-json/hc/v1/suggest?q=${URLEncoder.encode(kunci, "UTF-8")}"))
             val arr = o.optJSONArray("items") ?: JSONArray()
             val isi = (0 until arr.length()).mapNotNull { i ->
                 val it = arr.optJSONObject(i) ?: return@mapNotNull null
@@ -188,7 +303,14 @@ class HentaiCop : HttpSource() {
                     .map { Parser.unescapeEntities(it.value, false) }
                     .forEach { hasil += it }
             }
-            hasil.mapIndexed { i, u -> Page(i, u) }
+
+            // Beberapa host menolak tanpa Referer. Tautan yang hidup diletakkan lebih
+            // dulu supaya pemutar tidak membuka kualitas yang mati (gejala: 00:00).
+            // Kalau tidak ada yang hidup, semuanya tetap ditampilkan.
+            val daftar = hasil.toList()
+            if (daftar.size <= 1) return@fromCallable daftar.mapIndexed { i, u -> Page(i, u) }
+            val (nyala, mati) = daftar.partition { hidup(it) }
+            (nyala + mati).mapIndexed { i, u -> Page(i, u) }
         }
         .subscribeOn(Schedulers.io())
 }
