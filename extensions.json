@@ -160,5 +160,23 @@
         "baseUrl": "https://cosplaytele.com"
       }
     ]
+  },
+  {
+    "name": "Donghive",
+    "module": "donghive",
+    "pkg": "eu.kanade.tachiyomi.extension.id.donghive",
+    "lang": "id",
+    "code": 1,
+    "version": "1.4.0",
+    "nsfw": 0,
+    "sumber": "WordPress 7.1.4 (tema animestream); seri = kategori, episode = post; populer dari sidebar #wpop-items (weekly), terbaru via REST _embed=wp:term, genre /genres/<slug>/; video lewat <select class=mirror> base64 -> ok.ru hlsManifestUrl (Dailymotion 403, MEGA tidak bisa diputar)",
+    "sources": [
+      {
+        "name": "Donghive",
+        "id": 1,
+        "lang": "id",
+        "baseUrl": "https://donghive.vip"
+      }
+    ]
   }
 ]

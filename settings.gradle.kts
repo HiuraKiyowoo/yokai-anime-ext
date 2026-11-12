@@ -32,6 +32,7 @@ include(":hentaicop")
 include(":anichin")
 include(":kuramanime")
 include(":cosplaytele")
+include(":donghive")
 
 /*
  * Pustaka antarmuka sumber (eu.kanade.tachiyomi.source.*) tidak diterbitkan ke
