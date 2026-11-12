@@ -297,8 +297,6 @@ class Kuramanime : HttpSource() {
         }
         .subscribeOn(Schedulers.io())
 
-    override fun fetchImageUrl(page: Page): Observable<String> = Observable.just(page.url)
-
     override fun getFilterList(): FilterList = FilterList()
 
     companion object {
