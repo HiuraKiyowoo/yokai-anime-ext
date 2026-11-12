@@ -1,0 +1,109 @@
+===== awal =====
+Downloading https://services.gradle.org/distributions/gradle-8.14.4-bin.zip
+.............10%.............20%.............30%.............40%.............50%.............60%.............70%.............80%.............90%..............100%
+
+Welcome to Gradle 8.14.4!
+
+Here are the highlights of this release:
+ - Java 24 support
+ - GraalVM Native Image toolchain selection
+ - Enhancements to test reporting
+ - Build Authoring improvements
+
+For more details see https://docs.gradle.org/8.14.4/release-notes.html
+
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.14.4/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Type-safe project accessors is an incubating feature.
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+A problem occurred configuring project ':anichin'.
+> Could not resolve all dependencies for configuration 'classpath'.
+   > Could not find org.jetbrains.kotlin:kotlin-stdlib:2.0.21.
+     Searched in the following locations:
+       - https://plugins.gradle.org/m2/org/jetbrains/kotlin/kotlin-stdlib/2.0.21/kotlin-stdlib-2.0.21.pom
+       - https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-stdlib/2.0.21/kotlin-stdlib-2.0.21.pom
+       - https://dl.google.com/dl/android/maven2/org/jetbrains/kotlin/kotlin-stdlib/2.0.21/kotlin-stdlib-2.0.21.pom
+     Required by:
+         project :anichin
+   > Could not find org.jetbrains.kotlin:kotlin-reflect:2.0.21.
+     Searched in the following locations:
+       - https://plugins.gradle.org/m2/org/jetbrains/kotlin/kotlin-reflect/2.0.21/kotlin-reflect-2.0.21.pom
+       - https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-reflect/2.0.21/kotlin-reflect-2.0.21.pom
+       - https://dl.google.com/dl/android/maven2/org/jetbrains/kotlin/kotlin-reflect/2.0.21/kotlin-reflect-2.0.21.pom
+     Required by:
+         project :anichin
+   > Could not find org.jetbrains:annotations:13.0.
+     Searched in the following locations:
+       - https://plugins.gradle.org/m2/org/jetbrains/annotations/13.0/annotations-13.0.pom
+       - https://repo.maven.apache.org/maven2/org/jetbrains/annotations/13.0/annotations-13.0.pom
+===== What went wrong =====
+* What went wrong:
+A problem occurred configuring project ':anichin'.
+> Could not resolve all dependencies for configuration 'classpath'.
+   > Could not find org.jetbrains.kotlin:kotlin-stdlib:2.0.21.
+     Searched in the following locations:
+       - https://plugins.gradle.org/m2/org/jetbrains/kotlin/kotlin-stdlib/2.0.21/kotlin-stdlib-2.0.21.pom
+       - https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-stdlib/2.0.21/kotlin-stdlib-2.0.21.pom
+       - https://dl.google.com/dl/android/maven2/org/jetbrains/kotlin/kotlin-stdlib/2.0.21/kotlin-stdlib-2.0.21.pom
+     Required by:
+         project :anichin
+   > Could not find org.jetbrains.kotlin:kotlin-reflect:2.0.21.
+     Searched in the following locations:
+       - https://plugins.gradle.org/m2/org/jetbrains/kotlin/kotlin-reflect/2.0.21/kotlin-reflect-2.0.21.pom
+       - https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-reflect/2.0.21/kotlin-reflect-2.0.21.pom
+       - https://dl.google.com/dl/android/maven2/org/jetbrains/kotlin/kotlin-reflect/2.0.21/kotlin-reflect-2.0.21.pom
+     Required by:
+         project :anichin
+   > Could not find org.jetbrains:annotations:13.0.
+     Searched in the following locations:
+       - https://plugins.gradle.org/m2/org/jetbrains/annotations/13.0/annotations-13.0.pom
+       - https://repo.maven.apache.org/maven2/org/jetbrains/annotations/13.0/annotations-13.0.pom
+       - https://dl.google.com/dl/android/maven2/org/jetbrains/annotations/13.0/annotations-13.0.pom
+     Required by:
+         project :anichin
+   > Could not resolve org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.10.
+     Required by:
+===== error =====
+18:FAILURE: Build failed with an exception.
+22:> Could not resolve all dependencies for configuration 'classpath'.
+23:   > Could not find org.jetbrains.kotlin:kotlin-stdlib:2.0.21.
+30:   > Could not find org.jetbrains.kotlin:kotlin-reflect:2.0.21.
+37:   > Could not find org.jetbrains:annotations:13.0.
+44:   > Could not resolve org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.10.
+47:      > Could not resolve org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.10.
+48:         > Could not parse POM https://plugins.gradle.org/m2/org/jetbrains/kotlin/kotlin-gradle-plugin/2.4.10/kotlin-gradle-plugin-2.4.10.pom
+49:            > Could not find org.jetbrains.kotlin:kotlin-gradle-plugins-bom:2.4.10.
+54:   > Could not find org.jetbrains.kotlin:kotlin-stdlib:2.0.21.
+67:   > Could not find org.apache.httpcomponents:httpmime:4.5.6.
+76:   > Could not find commons-io:commons-io:2.16.1.
+84:   > Could not find org.ow2.asm:asm:9.7.1.
+93:   > Could not find org.ow2.asm:asm-analysis:9.7.1.
+100:   > Could not find org.ow2.asm:asm-commons:9.7.1.
+108:   > Could not find org.ow2.asm:asm-util:9.7.1.
+115:   > Could not find org.bouncycastle:bcpkix-jdk18on:1.79.
+125:   > Could not find org.glassfish.jaxb:jaxb-runtime:2.3.2.
+136:   > Could not find net.sf.jopt-simple:jopt-simple:4.9.
+143:   > Could not find com.squareup:javapoet:1.10.0.
+151:   > Could not find com.google.protobuf:protobuf-java:3.25.5.
+173:   > Could not find com.google.protobuf:protobuf-java-util:3.25.5.
+180:   > Could not find com.google.code.gson:gson:2.11.0.
+194:   > Could not find io.grpc:grpc-core:1.69.1.
+202:   > Could not find io.grpc:grpc-netty:1.69.1.
+210:   > Could not find io.grpc:grpc-protobuf:1.69.1.
+218:   > Could not find io.grpc:grpc-stub:1.69.1.
+226:   > Could not find io.grpc:grpc-inprocess:1.69.1.
+234:   > Could not find com.google.crypto.tink:tink:1.7.0.
+241:   > Could not find com.google.flatbuffers:flatbuffers-java:1.12.0.
+248:   > Could not find org.tensorflow:tensorflow-lite-metadata:0.2.0.
+255:   > Could not find com.google.guava:guava:33.3.1-jre.
+273:   > Could not find javax.inject:javax.inject:1.
+282:   > Could not find net.sf.kxml:kxml2:2.3.0.
+292:   > Could not find org.apache.commons:commons-compress:1.21.
+301:   > Could not find org.bouncycastle:bcprov-jdk18on:1.79.
+310:   > Could not find org.jetbrains.kotlin:kotlin-reflect:2.0.21.
+317:   > Could not find org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.1.20.
+331:   > Could not find org.apache.httpcomponents:httpcore:4.4.16.
+339:   > Could not find com.google.jimfs:jimfs:1.1.

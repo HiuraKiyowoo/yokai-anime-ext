@@ -224,7 +224,7 @@ class Kuramanime : HttpSource() {
         .readTimeout(30, TimeUnit.SECONDS)
         .build()
 
-    private fun sumberDari(html: String, alamat: String): List<Page> {
+    private fun sumberDari(html: String, alamat: String): List<Pair<String, String>> {
         val d = Jsoup.parse(html, alamat)
         val kandidat = LinkedHashMap<String, String>() // url -> kualitas
         d.select("source[id^=source], video#player source, source[src]").forEach { s ->
@@ -238,62 +238,131 @@ class Kuramanime : HttpSource() {
             val u = v?.attr("src").orEmpty()
             if (u.startsWith("http")) kandidat.putIfAbsent(bersih(u), "")
         }
-        return kandidat.entries
-            .sortedByDescending { it.value.filter { c -> c.isDigit() }.toIntOrNull() ?: 0 }
-            .mapIndexed { i, e -> Page(i, e.key) }
+        return kandidat.entries.map { it.key to it.value }
     }
 
-    private fun ambilSumber(alamat: String, klien: okhttp3.OkHttpClient): List<Page> {
-        // 1) cookie + CSRF
-        val halaman = klien.newCall(
-            Request.Builder().url(alamat)
+    /**
+     * DoodStream (server cadangan): halaman /e/<id> memuat `/pass_md5/<token>`;
+     * meminta jalur itu (Referer = halaman embed) mengembalikan dasar URL MP4,
+     * lalu tinggal ditempeli 10 karakter acak + token. Terbukti balas 206 video/mp4.
+     */
+    private fun dariDood(embed: String): String? {
+        val host = embed.substringBefore("/e").ifBlank { return null }
+        val html = runCatching { teks(embed, referer = "$baseUrl/") }.getOrNull() ?: return null
+        val jalur = Regex("""/pass_md5/[^"'<>\\]+""").find(html)?.value ?: return null
+        val dasar = runCatching { teks("$host$jalur", referer = embed).trim() }.getOrNull() ?: return null
+        if (dasar.length < 30 || !dasar.startsWith("http")) return null
+        val token = jalur.substringAfterLast('-')
+        val acak = (1..10)
+            .map { "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".random() }
+            .joinToString("")
+        return "$dasar$acak?token=$token&expiry=${System.currentTimeMillis()}"
+    }
+
+    /** Server yang ditawarkan halaman episode; kuramadrive dulu (paling bersih). */
+    private fun serverDari(html: String): List<String> {
+        val d = Jsoup.parse(html, baseUrl)
+        val opsi = d.select("select#changeServer option")
+            .map { it.attr("value").trim() }
+            .filter { it.isNotBlank() }
+        return (listOf("kuramadrive") + opsi).distinct()
+    }
+
+    /** Satu permintaan ke satu server; balik daftar (url, kualitas). */
+    private fun kandidatServer(
+        klien: okhttp3.OkHttpClient,
+        alamat: String,
+        csrf: String,
+        token: String,
+        server: String,
+    ): List<Pair<String, String>> {
+        val alamatPost = "$alamat?$PARAM_TOKEN=${URLEncoder.encode(token, "UTF-8")}" +
+            "&$PARAM_SERVER=${URLEncoder.encode(server, "UTF-8")}&page=1"
+        val html = klien.newCall(
+            Request.Builder().url(alamatPost)
+                .post(FormBody.Builder().add("authorization", AUTH).build())
                 .header("User-Agent", ua)
                 .header("Accept-Language", "id-ID,id;q=0.9")
-                .header("Referer", "$baseUrl/")
+                .header("X-Requested-With", "XMLHttpRequest")
+                .header("X-CSRF-TOKEN", csrf)
+                .header("X-Request-ID", "a1b2c3")
+                .header("Referer", alamat)
                 .build(),
         ).execute().use { it.body?.string().orEmpty() }
 
-        val csrf = Regex("""name="csrf-token" content="([^"]+)"""").find(halaman)
-            ?.groupValues?.get(1).orEmpty()
-
-        // 2) token halaman
-        val token = klien.newCall(
-            Request.Builder().url("$baseUrl/assets/$BERKAS_TOKEN")
-                .header("User-Agent", ua)
-                .header("X-Fuck-ID", "$KUNCI_TOKEN:$TOKEN_TOKEN")
-                .header("X-Request-ID", "a1b2c3")
-                .header("X-Request-Index", "0")
-                .header("Referer", "$baseUrl/")
-                .build(),
-        ).execute().use { it.body?.string().orEmpty() }.trim()
-
-        if (token.isBlank()) return emptyList()
-
-        // 3) minta pemutar
-        val alamatPost = "$alamat?$PARAM_TOKEN=${URLEncoder.encode(token, "UTF-8")}" +
-            "&$PARAM_SERVER=kuramadrive&page=1"
-        repeat(2) {
-            val r = klien.newCall(
-                Request.Builder().url(alamatPost)
-                    .post(FormBody.Builder().add("authorization", AUTH).build())
-                    .header("User-Agent", ua)
-                    .header("Accept-Language", "id-ID,id;q=0.9")
-                    .header("X-Requested-With", "XMLHttpRequest")
-                    .header("X-CSRF-TOKEN", csrf)
-                    .header("X-Request-ID", "a1b2c3")
-                    .header("Referer", alamat)
-                    .build(),
-            ).execute().use { it.body?.string().orEmpty() }
-            val hasil = sumberDari(r, alamat)
-            if (hasil.isNotEmpty()) return hasil
+        val hasil = LinkedHashMap<String, String>()
+        sumberDari(html, alamat).forEach { (u, q) -> hasil.putIfAbsent(u, q) }
+        if (hasil.isEmpty()) {
+            // server lain memakai <iframe> pemutar pihak ketiga
+            Jsoup.parse(html, alamat).select("iframe[src]").forEach { f ->
+                val u = bersih(f.attr("src"))
+                val dood = u.contains("playmogo") || u.contains("/dood") || u.contains("doodstream")
+                val lurus = if (dood) runCatching { dariDood(u) }.getOrNull() else null
+                if (!lurus.isNullOrBlank()) hasil.putIfAbsent(lurus, "")
+            }
         }
-        return emptyList()
+        return hasil.entries.map { it.key to it.value }
     }
+
+    /** Probe ringan: 200/206/416 = berkas ada. Host yang sudah mati akan gagal di sini. */
+    private fun hidup(url: String): Boolean = runCatching {
+        client.newCall(
+            Request.Builder().url(url)
+                .header("User-Agent", ua)
+                .header("Accept-Language", "id-ID,id;q=0.9")
+                .header("Referer", "$baseUrl/")
+                .header("Range", "bytes=0-1023")
+                .build(),
+        ).execute().use { it.isSuccessful || it.code == 416 }
+    }.getOrDefault(false)
 
     override fun fetchPageList(chapter: SChapter): Observable<List<Page>> = Observable
         .fromCallable {
             val alamat = "$baseUrl${chapter.url}"
-            ambilSumber(alamat, klienSesi())
+            val klien = klienSesi()
+
+            // 1) cookie + CSRF
+            val halaman = klien.newCall(
+                Request.Builder().url(alamat)
+                    .header("User-Agent", ua)
+                    .header("Accept-Language", "id-ID,id;q=0.9")
+                    .header("Referer", "$baseUrl/")
+                    .build(),
+            ).execute().use { it.body?.string().orEmpty() }
+
+            val csrf = Regex("""name="csrf-token" content="([^"]+)"""").find(halaman)
+                ?.groupValues?.get(1).orEmpty()
+
+            // 2) token halaman
+            val token = klien.newCall(
+                Request.Builder().url("$baseUrl/assets/$BERKAS_TOKEN")
+                    .header("User-Agent", ua)
+                    .header("X-Fuck-ID", "$KUNCI_TOKEN:$TOKEN_TOKEN")
+                    .header("X-Request-ID", "a1b2c3")
+                    .header("X-Request-Index", "0")
+                    .header("Referer", "$baseUrl/")
+                    .build(),
+            ).execute().use { it.body?.string().orEmpty() }.trim()
+
+            if (token.isBlank()) return@fromCallable emptyList()
+
+            // 3) tanya tiap server sampai dapat yang hidup
+            val semua = LinkedHashMap<String, String>()
+            for (srv in serverDari(halaman)) {
+                val kandidat = runCatching { kandidatServer(klien, alamat, csrf, token, srv) }
+                    .getOrDefault(emptyList())
+                kandidat.forEach { (u, q) -> semua.putIfAbsent(u, if (q.isBlank()) srv else q) }
+                if (semua.keys.any { hidup(it) }) break
+            }
+
+            val daftar = semua.entries.toList()
+            if (daftar.size <= 1) return@fromCallable daftar.mapIndexed { i, e -> Page(i, e.key) }
+
+            // tautan hidup dulu + kualitas tertinggi lebih awal
+            val (nyala, mati) = daftar.partition { hidup(it.key) }
+            val urut = { e: Pair<String, String> -> e.second.filter { c -> c.isDigit() }.toIntOrNull() ?: 0 }
+            (nyala.sortedByDescending(urut) + mati.sortedByDescending(urut))
+                .mapIndexed { i, e -> Page(i, e.key) }
         }
         .subscribeOn(Schedulers.io())
 
