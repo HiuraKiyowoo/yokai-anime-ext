@@ -30,7 +30,7 @@ class Dongha : HttpSource(), ConfigurableSource {
     override val baseUrl = "https://dongha.id"
     override val supportsLatest = true
 
-    override val client: OkHttpClient = network.client.newBuilder()
+    override val client: OkHttpClient = super.client.newBuilder()
         .addInterceptor { chain ->
             val req = chain.request().newBuilder()
                 .header("User-Agent", Gateway.UA)
@@ -118,6 +118,16 @@ class Dongha : HttpSource(), ConfigurableSource {
 
     private fun daftar(path: String): JSONArray = ambil(path).optJSONArray("data") ?: JSONArray()
 
+    /** org.json.JSONArray tidak punya map(); helper ini menggantikannya. */
+    private inline fun <T> JSONArray.petakan(blok: (JSONObject) -> T?): List<T> {
+        val hasil = ArrayList<T>(length())
+        for (i in 0 until length()) {
+            val o = optJSONObject(i) ?: continue
+            blok(o)?.let(hasil::add)
+        }
+        return hasil
+    }
+
     // --- Pemetaan ------------------------------------------------------------
 
     private fun JSONObject.str(kunci: String): String? =
@@ -148,13 +158,12 @@ class Dongha : HttpSource(), ConfigurableSource {
 
     override fun fetchPopularManga(page: Int): Observable<MangasPage> = Observable.fromCallable {
         val arr = daftar("/explore?category=donghua&sort=popular&limit=24&page=$page")
-        MangasPage(arr.map { keManga(it as JSONObject) }, arr.length() >= 24)
+        MangasPage(arr.petakan { keManga(it) }, arr.length() >= 24)
     }.subscribeOn(Schedulers.io())
 
     override fun fetchLatestUpdates(page: Int): Observable<MangasPage> = Observable.fromCallable {
         val arr = daftar("/latest-episodes?category=donghua&limit=24&page=$page")
-        val hasil = (0 until arr.length()).mapNotNull { i ->
-            val o = arr.optJSONObject(i) ?: return@mapNotNull null
+        val hasil = arr.petakan { o ->
             // Baris "terbaru" berbentuk ringkasan series + latest_episode; ubah ke bentuk series.
             if (o.has("series_slug")) {
                 keManga(JSONObject().apply {
@@ -183,7 +192,7 @@ class Dongha : HttpSource(), ConfigurableSource {
                 if (genre != null) append("&filter[category][slug][_eq]=").append(genre)
             }
             val arr = daftar(path)
-            MangasPage(arr.map { keManga(it as JSONObject) }, arr.length() >= 24)
+            MangasPage(arr.petakan { keManga(it) }, arr.length() >= 24)
         }.subscribeOn(Schedulers.io())
 
     // --- Detail --------------------------------------------------------------
