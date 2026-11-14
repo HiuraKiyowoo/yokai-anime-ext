@@ -188,5 +188,15 @@
     "version": "1.4.2",
     "nsfw": 0,
     "sumber": "gateway terenkripsi https://gateway.dongha.id (HKDF-SHA256 + ChaCha20-Poly1305); butuh akun (email+sandi di preferensi) untuk login & refresh token; katalog /explore, /latest-episodes, /items/series, episode /items/episodes, video /media/episodes/<id>/sources (MP4 360-1080p, tanpa DRM)"
+  },
+  {
+    "name": "LayarAnime",
+    "module": "layaranime",
+    "pkg": "eu.kanade.tachiyomi.extension.id.layaranime",
+    "lang": "id",
+    "code": 1,
+    "version": "1.4.0",
+    "nsfw": 0,
+    "sumber": "HTML+Jsoup; kartu <article> a[itemprop=url]/meta[itemprop=image]/h2[itemprop=name]; daftar /ongoing & /release (24 kartu), cari /search?q=; episode /<slug>/episode-N -> iframe player.ablink.sbs -> halaman pemutar memuat m3u8 langsung (segmen .pict/MPEG-TS, tanpa Referer)"
   }
 ]
