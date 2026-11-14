@@ -18,8 +18,8 @@ android {
         applicationId = "eu.kanade.tachiyomi.extension.id.dongha"
         minSdk = 28   // ChaCha20-Poly1305 (javax.crypto) butuh API 28
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.4.1"
+        versionCode = 3
+        versionName = "1.4.2"
     }
 
     signingConfigs {

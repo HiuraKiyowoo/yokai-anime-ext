@@ -184,8 +184,8 @@
     "module": "dongha",
     "pkg": "eu.kanade.tachiyomi.extension.id.dongha",
     "lang": "id",
-    "code": 2,
-    "version": "1.4.1",
+    "code": 3,
+    "version": "1.4.2",
     "nsfw": 0,
     "sumber": "gateway terenkripsi https://gateway.dongha.id (HKDF-SHA256 + ChaCha20-Poly1305); butuh akun (email+sandi di preferensi) untuk login & refresh token; katalog /explore, /latest-episodes, /items/series, episode /items/episodes, video /media/episodes/<id>/sources (MP4 360-1080p, tanpa DRM)"
   }

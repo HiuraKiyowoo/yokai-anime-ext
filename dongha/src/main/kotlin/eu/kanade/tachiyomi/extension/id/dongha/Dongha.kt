@@ -133,13 +133,30 @@ class Dongha : HttpSource(), ConfigurableSource {
     private fun JSONObject.str(kunci: String): String? =
         optString(kunci).takeIf { it.isNotBlank() && it != "null" }
 
+    /**
+     * Ambil URL aset dari field yang bisa berbentuk dua rupa di API Dongha:
+     *   "poster_image": "abc.png"                      (flat, mis. /latest-episodes)
+     *   "poster_image": {"filename_disk": "abc.png"}   (nested, saat fields=poster_image.filename_disk)
+     * Tanpa ini poster kosong di semua kartu.
+     */
+    private fun JSONObject.aset(kunci: String): String? {
+        val mentah = opt(kunci)
+        val nama = when (mentah) {
+            is JSONObject -> mentah.optString("filename_disk")
+                .ifBlank { mentah.optString("filename_download") }
+            is String -> mentah
+            else -> ""
+        }
+        return Gateway.aset(nama.takeIf { it.isNotBlank() })
+    }
+
     private fun JSONObject.bentukSeriesSlug(): String =
         str("slug") ?: error("Series tanpa slug tidak bisa dibuka")
 
     private fun keManga(o: JSONObject): SManga = SManga.create().apply {
         url = "/series/${o.bentukSeriesSlug()}"
         title = o.str("title") ?: o.str("title_english") ?: "(tanpa judul)"
-        thumbnail_url = Gateway.aset(o.str("poster_image"))
+        thumbnail_url = o.aset("poster_image") ?: o.aset("backdrop_image")
         genre = listOfNotNull(
             o.optJSONObject("category")?.str("name"),
             o.optString("original_language").takeIf { it.isNotBlank() }?.uppercase(),
@@ -169,7 +186,7 @@ class Dongha : HttpSource(), ConfigurableSource {
                 keManga(JSONObject().apply {
                     put("slug", o.str("series_slug"))
                     put("title", o.str("series_title"))
-                    put("poster_image", o.str("poster_image"))
+                    put("poster_image", o.opt("poster_image"))
                     put("category", JSONObject().put("name", "Donghua"))
                 })
             } else {
