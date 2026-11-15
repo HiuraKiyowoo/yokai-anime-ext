@@ -208,5 +208,15 @@
     "version": "1.4.0",
     "nsfw": 0,
     "sumber": "WordPress kotakanime; kartu div.sera; /popular-series/, /ongoing-list/, /?s=; seri /anime/<slug>/ (h1 data-title-default); episode data-post + data-nume/type; POST admin-ajax player_ajax -> iframe -> embed; payload di-XOR (kunci dari skrip) -> /go/dl/?url=k.<hash> -> 302 -> mp4 720p/360p"
+  },
+  {
+    "name": "KaitoAni",
+    "module": "kaitoani",
+    "pkg": "eu.kanade.tachiyomi.extension.id.kaitoani",
+    "lang": "id",
+    "code": 1,
+    "version": "1.4.0",
+    "nsfw": 1,
+    "sumber": "WordPress; kartu article.bs (a[href] + img.ts-post-image); /hentai-list/ + /page/N/, beranda, /?s=; seri /hentai/<slug>/; episode memuat 3 tautan MediaFire (1080/720/480) -> halaman MediaFire -> tautan download*.mediafire.com (uji Range 206 video/mp4). Pemutar situs memakai packer kaomoji (belum diporting)."
   }
 ]
