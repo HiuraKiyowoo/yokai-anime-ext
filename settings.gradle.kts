@@ -35,6 +35,7 @@ include(":cosplaytele")
 include(":donghive")
 include(":dongha")
 include(":layaranime")
+include(":nontonanimeid")
 
 /*
  * Pustaka antarmuka sumber (eu.kanade.tachiyomi.source.*) tidak diterbitkan ke

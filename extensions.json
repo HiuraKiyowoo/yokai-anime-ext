@@ -198,5 +198,15 @@
     "version": "1.4.0",
     "nsfw": 0,
     "sumber": "HTML+Jsoup; kartu <article> a[itemprop=url]/meta[itemprop=image]/h2[itemprop=name]; daftar /ongoing & /release (24 kartu), cari /search?q=; episode /<slug>/episode-N -> iframe player.ablink.sbs -> halaman pemutar memuat m3u8 langsung (segmen .pict/MPEG-TS, tanpa Referer)"
+  },
+  {
+    "name": "NontonAnimeID",
+    "module": "nontonanimeid",
+    "pkg": "eu.kanade.tachiyomi.extension.id.nontonanimeid",
+    "lang": "id",
+    "code": 1,
+    "version": "1.4.0",
+    "nsfw": 0,
+    "sumber": "WordPress kotakanime; kartu div.sera; /popular-series/, /ongoing-list/, /?s=; seri /anime/<slug>/ (h1 data-title-default); episode data-post + data-nume/type; POST admin-ajax player_ajax -> iframe -> embed; payload di-XOR (kunci dari skrip) -> /go/dl/?url=k.<hash> -> 302 -> mp4 720p/360p"
   }
 ]
