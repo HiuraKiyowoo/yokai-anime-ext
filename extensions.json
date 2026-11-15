@@ -268,5 +268,23 @@
     "baseUrl": "https://samehadaku.li"
    }
   ]
+ },
+ {
+  "name": "Anoboy",
+  "module": "anoboy",
+  "pkg": "eu.kanade.tachiyomi.extension.id.anoboy",
+  "lang": "id",
+  "code": 1,
+  "version": "1.4.0",
+  "nsfw": 0,
+  "sumber": "WordPress; kartu article.bs; katalog /anime/?order=popular|update; cari /anime/?s=; genre /genres/<slug>/; episode .eplister; video vkspeed (JW Player ter-packer → mp4 vkcdn) dengan cadangan googlevideo blogger.",
+  "sources": [
+   {
+    "name": "Anoboy",
+    "id": 1,
+    "lang": "id",
+    "baseUrl": "https://anoboy.be"
+   }
+  ]
  }
 ]

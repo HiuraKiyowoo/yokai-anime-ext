@@ -38,6 +38,7 @@ include(":layaranime")
 include(":nontonanimeid")
 include(":kaitoani")
 include(":samehadaku")
+include(":anoboy")
 
 /*
  * Pustaka antarmuka sumber (eu.kanade.tachiyomi.source.*) tidak diterbitkan ke
