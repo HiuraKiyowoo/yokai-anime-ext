@@ -37,6 +37,7 @@ include(":dongha")
 include(":layaranime")
 include(":nontonanimeid")
 include(":kaitoani")
+include(":samehadaku")
 
 /*
  * Pustaka antarmuka sumber (eu.kanade.tachiyomi.source.*) tidak diterbitkan ke

@@ -250,5 +250,23 @@
     "baseUrl": "https://kaitoani.org"
    }
   ]
+ },
+ {
+  "name": "Samehadaku",
+  "module": "samehadaku",
+  "pkg": "eu.kanade.tachiyomi.extension.id.samehadaku",
+  "lang": "id",
+  "code": 1,
+  "version": "1.4.0",
+  "nsfw": 0,
+  "sumber": "WordPress; kartu article.bs; katalog /anime/?order=popular|update; cari /anime/?s=; genre /genres/<slug>/; episode .eplister; video iframe blogger.com/video.g → googlevideo (itag 22/18).",
+  "sources": [
+   {
+    "name": "Samehadaku",
+    "id": 1,
+    "lang": "id",
+    "baseUrl": "https://samehadaku.li"
+   }
+  ]
  }
 ]
