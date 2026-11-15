@@ -83,13 +83,16 @@ class Nontonanimeid : HttpSource() {
             ?: a.selectFirst("h3, h2, .title")?.text()
             ?: a.selectFirst("img")?.attr("alt")?.takeIf { it.isNotBlank() }
             ?: return null
-        val gambar = a.selectFirst("img")?.let {
-            it.attr("data-src").ifBlank { it.attr("src") }
-        }?.takeIf { it.isNotBlank() && !it.startsWith("data:") }
+        // Hindari `?.let {}` di atas tipe jsoup: compiler mencoba membaca anotasi
+        // org.jspecify.annotations.Nullable yang tidak ada di classpath modul
+        // ("Type annotation class ... is inaccessible"). Rantai ?. biasa aman.
+        val img = a.selectFirst("img")
+        val gambar = img?.attr("data-src")?.takeIf { it.isNotBlank() }
+            ?: img?.attr("src")?.takeIf { it.isNotBlank() && !it.startsWith("data:") }
         return SManga.create().apply {
             url = href
             title = judul.trim()
-            thumbnail_url = gambar?.let { absolut(it) }
+            if (!gambar.isNullOrBlank()) thumbnail_url = absolut(gambar)
         }
     }
 
