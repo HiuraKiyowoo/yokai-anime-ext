@@ -187,7 +187,15 @@
   "code": 3,
   "version": "1.4.2",
   "nsfw": 0,
-  "sumber": "gateway terenkripsi https://gateway.dongha.id (HKDF-SHA256 + ChaCha20-Poly1305); butuh akun (email+sandi di preferensi) untuk login & refresh token; katalog /explore, /latest-episodes, /items/series, episode /items/episodes, video /media/episodes/<id>/sources (MP4 360-1080p, tanpa DRM)"
+  "sumber": "gateway terenkripsi https://gateway.dongha.id (HKDF-SHA256 + ChaCha20-Poly1305); butuh akun (email+sandi di preferensi) untuk login & refresh token; katalog /explore, /latest-episodes, /items/series, episode /items/episodes, video /media/episodes/<id>/sources (MP4 360-1080p, tanpa DRM)",
+  "sources": [
+   {
+    "name": "Dongha",
+    "id": 1,
+    "lang": "id",
+    "baseUrl": "https://dongha.id"
+   }
+  ]
  },
  {
   "name": "LayarAnime",
@@ -197,7 +205,15 @@
   "code": 1,
   "version": "1.4.0",
   "nsfw": 0,
-  "sumber": "HTML+Jsoup; kartu <article> a[itemprop=url]/meta[itemprop=image]/h2[itemprop=name]; daftar /ongoing & /release (24 kartu), cari /search?q=; episode /<slug>/episode-N -> iframe player.ablink.sbs -> halaman pemutar memuat m3u8 langsung (segmen .pict/MPEG-TS, tanpa Referer)"
+  "sumber": "HTML+Jsoup; kartu <article> a[itemprop=url]/meta[itemprop=image]/h2[itemprop=name]; daftar /ongoing & /release (24 kartu), cari /search?q=; episode /<slug>/episode-N -> iframe player.ablink.sbs -> halaman pemutar memuat m3u8 langsung (segmen .pict/MPEG-TS, tanpa Referer)",
+  "sources": [
+   {
+    "name": "LayarAnime",
+    "id": 1,
+    "lang": "id",
+    "baseUrl": "https://layaranime.net"
+   }
+  ]
  },
  {
   "name": "NontonAnimeID",
@@ -207,7 +223,15 @@
   "code": 1,
   "version": "1.4.0",
   "nsfw": 0,
-  "sumber": "WordPress kotakanime; kartu div.sera; /popular-series/, /ongoing-list/, /?s=; seri /anime/<slug>/ (h1 data-title-default); episode data-post + data-nume/type; POST admin-ajax player_ajax -> iframe -> embed; payload di-XOR (kunci dari skrip) -> /go/dl/?url=k.<hash> -> 302 -> mp4 720p/360p"
+  "sumber": "WordPress kotakanime; kartu div.sera; /popular-series/, /ongoing-list/, /?s=; seri /anime/<slug>/ (h1 data-title-default); episode data-post + data-nume/type; POST admin-ajax player_ajax -> iframe -> embed; payload di-XOR (kunci dari skrip) -> /go/dl/?url=k.<hash> -> 302 -> mp4 720p/360p",
+  "sources": [
+   {
+    "name": "NontonAnimeID",
+    "id": 1,
+    "lang": "id",
+    "baseUrl": "https://s13.nontonanimeid.boats"
+   }
+  ]
  },
  {
   "name": "KaitoAni",
@@ -217,6 +241,14 @@
   "code": 2,
   "version": "1.4.1",
   "nsfw": 1,
-  "sumber": "WordPress; kartu article.bs (a[href] + img.ts-post-image); /hentai-list/ + /page/N/, beranda, /?s=; seri /hentai/<slug>/; episode memuat 3 tautan MediaFire (1080/720/480) -> halaman MediaFire -> tautan download*.mediafire.com (uji Range 206 video/mp4). Pemutar situs memakai packer kaomoji (belum diporting)."
+  "sumber": "WordPress; kartu article.bs (a[href] + img.ts-post-image); /hentai-list/ + /page/N/, beranda, /?s=; seri /hentai/<slug>/; episode memuat 3 tautan MediaFire (1080/720/480) -> halaman MediaFire -> tautan download*.mediafire.com (uji Range 206 video/mp4). Pemutar situs memakai packer kaomoji (belum diporting).",
+  "sources": [
+   {
+    "name": "KaitoAni",
+    "id": 1,
+    "lang": "id",
+    "baseUrl": "https://kaitoani.org"
+   }
+  ]
  }
 ]
