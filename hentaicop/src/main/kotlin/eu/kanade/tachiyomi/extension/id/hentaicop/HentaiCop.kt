@@ -143,6 +143,14 @@ class HentaiCop : HttpSource() {
         )
     }
 
+    /**
+     * Halaman lanjutan bisa membalas 404 — bukan karena pola URL salah, tapi karena hasil
+     * pencarian itu memang cuma satu halaman. Itu bukan galat bagi pengguna: kembalikan HTML
+     * kosong supaya daftar berhenti sendiri, bukan memunculkan dialog error.
+     */
+    private fun kalauGagalKosong(alamat: String): String =
+        runCatching { teks(alamat) }.getOrElse { "<html></html>" }
+
     private fun params(filters: FilterList): List<String> = filters
         .filterIsInstance<Pilih>()
         .mapNotNull { f ->
@@ -150,11 +158,24 @@ class HentaiCop : HttpSource() {
             if (v.isBlank()) null else "${f.param}=${URLEncoder.encode(v, "UTF-8")}"
         }
 
-    /** Arsip HTML: /series/?<params> · halaman berikutnya /series/page/N/?<params>. */
+    /**
+     * Arsip HTML: /series/?<params> · halaman berikutnya /series/page/N/?<params>.
+     *
+     * PENGECUALIAN PENTING: kalau ada parameter pencarian (`s=`), situs membalas 404 untuk
+     * `/series/page/N/?s=...` (terukur 15 Nov 2026). Satu-satunya bentuk paginasi yang hidup
+     * untuk pencarian adalah di AKAR: `/page/N/?s=...` (isi halaman 2 memang berbeda dari
+     * halaman 1). Bentuk `?s=...&page=N` juga tidak berpaginasi — ia mengembalikan halaman 1.
+     */
     private fun dariArsip(page: Int, param: List<String>): MangasPage {
         val q = if (param.isEmpty()) "" else "?" + param.joinToString("&")
-        val alamat = if (page <= 1) "$PROYEK/series/$q" else "$PROYEK/series/page/$page/$q"
-        val doc = Jsoup.parse(teks(alamat), alamat)
+        val mencari = param.any { it.startsWith("s=") }
+        val alamat = when {
+            mencari && page <= 1 -> "$PROYEK/$q"
+            mencari -> "$PROYEK/page/$page/$q"
+            page <= 1 -> "$PROYEK/series/$q"
+            else -> "$PROYEK/series/page/$page/$q"
+        }
+        val doc = Jsoup.parse(kalauGagalKosong(alamat), alamat)
         val isi = doc.select("article.ht-card").mapNotNull { kartu ->
             val a = kartu.selectFirst("h2.ht-card__title a[href]") ?: kartu.selectFirst("a[href]")
             ?: return@mapNotNull null
@@ -167,7 +188,10 @@ class HentaiCop : HttpSource() {
                 initialized = false
             }
         }.distinctBy { it.url }
-        return MangasPage(isi, isi.isNotEmpty())
+        // Halaman berikutnya dibaca dari markup situs (link rel=next / a.next.page-numbers),
+        // bukan dari "daftar tidak kosong" — cara lama membuat paginasi tak pernah berhenti.
+        val lanjut = doc.selectFirst("link[rel=next], a.next.page-numbers") != null
+        return MangasPage(isi, lanjut)
     }
 
     // --- Katalog ------------------------------------------------------------
@@ -215,6 +239,12 @@ class HentaiCop : HttpSource() {
             val arr = o.optJSONArray("items") ?: JSONArray()
             val isi = (0 until arr.length()).mapNotNull { i ->
                 val it = arr.optJSONObject(i) ?: return@mapNotNull null
+                // Endpoint ini mengembalikan DUA tipe halaman: "series" (satu halaman = satu
+                // episode, ada iframe pemutar) dan "manga" (/manga/<slug>/ — halaman seri
+                // bergaya manga, NOL iframe). Membuka yang tipe "manga" berakhir di pemutar
+                // tanpa sumber, jadi hanya tipe yang bisa diputar yang ditampilkan.
+                val tipe = it.optString("type").ifBlank { "series" }
+                if (!tipe.equals("series", true)) return@mapNotNull null
                 val path = it.optString("url").removePrefix(PROYEK)
                 if (path.isBlank()) null else SManga.create().apply {
                     url = path
@@ -223,6 +253,9 @@ class HentaiCop : HttpSource() {
                     initialized = false
                 }
             }
+            // Kalau semua hasil tersaring, jatuh ke pencarian arsip supaya pengguna tidak
+            // melihat daftar kosong padahal situs punya hasil.
+            if (isi.isEmpty()) return@fromCallable dariArsip(1, listOf("s=${URLEncoder.encode(kunci, "UTF-8")}"))
             MangasPage(isi, false)
         }
         .subscribeOn(Schedulers.io())
@@ -308,6 +341,18 @@ class HentaiCop : HttpSource() {
             // dulu supaya pemutar tidak membuka kualitas yang mati (gejala: 00:00).
             // Kalau tidak ada yang hidup, semuanya tetap ditampilkan.
             val daftar = hasil.toList()
+            // Daftar kosong = aplikasi membuka pemutar tanpa sumber ("00:00", tanpa pesan).
+            // Lebih baik melempar pesan supaya penyebabnya kelihatan.
+            if (daftar.isEmpty()) {
+                throw Exception(
+                    if (iframes.isEmpty()) {
+                        "Halaman ini tidak punya pemutar video (kemungkinan halaman seri bertipe " +
+                            "manga). Pilih judul lain dari hasil pencarian."
+                    } else {
+                        "Pemutar di halaman ini tidak mengembalikan tautan .m3u8. Coba lagi nanti."
+                    },
+                )
+            }
             if (daftar.size <= 1) return@fromCallable daftar.mapIndexed { i, u -> Page(i, u) }
             val (nyala, mati) = daftar.partition { hidup(it) }
             (nyala + mati).mapIndexed { i, u -> Page(i, u) }

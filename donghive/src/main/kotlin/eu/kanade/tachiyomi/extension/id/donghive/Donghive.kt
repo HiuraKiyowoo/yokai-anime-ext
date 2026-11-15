@@ -194,14 +194,20 @@ class Donghive : HttpSource() {
         .fromCallable {
             val q = URLEncoder.encode(query.trim(), "UTF-8")
             val genre = filters.filterIsInstance<Pilih>().firstOrNull()?.nilai.orEmpty()
+            // Pencarian teks TIDAK bisa dipaginasi di situs ini: `/page/N/?s=` balas 404 dan
+            // `?s=...&page=N` mengembalikan halaman 1 apa adanya (terukur 15 Nov 2026).
+            // Jadi kalau ada kata kunci: hanya halaman 1, hasNext=false.
             val alamat = when {
-                genre.isNotBlank() && page > 1 -> "$PROYEK/genres/$genre/page/$page/?s=$q"
-                genre.isNotBlank() -> "$PROYEK/genres/$genre/?s=$q"
-                page > 1 -> "$PROYEK/page/$page/?s=$q"
-                else -> "$PROYEK/?s=$q"
+                q.isNotBlank() && page > 1 -> return@fromCallable MangasPage(emptyList(), false)
+                q.isNotBlank() && genre.isBlank() -> "$PROYEK/?s=$q"
+                q.isNotBlank() -> "$PROYEK/genres/$genre/?s=$q"
+                genre.isNotBlank() && page > 1 -> "$PROYEK/genres/$genre/page/$page/"
+                genre.isNotBlank() -> "$PROYEK/genres/$genre/"
+                page > 1 -> "$PROYEK/page/$page/"
+                else -> "$PROYEK/"
             }
             val isi = dariKartu(doc(alamat))
-            MangasPage(isi, isi.size >= 10)
+            MangasPage(isi, q.isBlank() && isi.size >= 10)
         }
         .subscribeOn(Schedulers.io())
 

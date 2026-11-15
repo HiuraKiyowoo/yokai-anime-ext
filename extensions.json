@@ -1,222 +1,222 @@
 [
-  {
+ {
+  "name": "Wibutime",
+  "module": "wibutime",
+  "pkg": "eu.kanade.tachiyomi.extension.id.wibutime",
+  "lang": "id",
+  "code": 7,
+  "version": "1.5.6",
+  "nsfw": 0,
+  "sumber": "Backend Supabase aplikasi Wibutime (katalog, episode, tautan video)",
+  "sources": [
+   {
     "name": "Wibutime",
-    "module": "wibutime",
-    "pkg": "eu.kanade.tachiyomi.extension.id.wibutime",
+    "id": 1,
     "lang": "id",
-    "code": 7,
-    "version": "1.5.6",
-    "nsfw": 0,
-    "sumber": "Backend Supabase aplikasi Wibutime (katalog, episode, tautan video)",
-    "sources": [
-      {
-        "name": "Wibutime",
-        "id": 1,
-        "lang": "id",
-        "baseUrl": "https://paivcxbhxyytczbpyzla.supabase.co"
-      }
-    ]
-  },
-  {
+    "baseUrl": "https://paivcxbhxyytczbpyzla.supabase.co"
+   }
+  ]
+ },
+ {
+  "name": "AnimeIn",
+  "module": "animein",
+  "pkg": "eu.kanade.tachiyomi.extension.id.animein",
+  "lang": "id",
+  "code": 6,
+  "version": "1.5.5",
+  "nsfw": 0,
+  "sumber": "API AnimeIn (backend aplikasi Nefusoft) + genre dipecah per chip (API mengirim \"Drama,Romance\") + pesan jelas bila server hanya menyediakan embed mati",
+  "sources": [
+   {
     "name": "AnimeIn",
-    "module": "animein",
-    "pkg": "eu.kanade.tachiyomi.extension.id.animein",
+    "id": 1,
     "lang": "id",
-    "code": 6,
-    "version": "1.5.5",
-    "nsfw": 0,
-    "sumber": "API AnimeIn (backend aplikasi Nefusoft) + genre dipecah per chip (API mengirim \"Drama,Romance\") + pesan jelas bila server hanya menyediakan embed mati",
-    "sources": [
-      {
-        "name": "AnimeIn",
-        "id": 1,
-        "lang": "id",
-        "baseUrl": "https://xyz-api.animein.net"
-      }
-    ]
-  },
-  {
+    "baseUrl": "https://xyz-api.animein.net"
+   }
+  ]
+ },
+ {
+  "name": "AnimeLovers",
+  "module": "animelovers",
+  "pkg": "eu.kanade.tachiyomi.extension.id.animelovers",
+  "lang": "id",
+  "code": 3,
+  "version": "1.4.2",
+  "nsfw": 0,
+  "sumber": "API lama apps.animekita.org/api/v1.2.5 (tanpa enkripsi)",
+  "sources": [
+   {
     "name": "AnimeLovers",
-    "module": "animelovers",
-    "pkg": "eu.kanade.tachiyomi.extension.id.animelovers",
+    "id": 1,
     "lang": "id",
-    "code": 3,
-    "version": "1.4.2",
-    "nsfw": 0,
-    "sumber": "API lama apps.animekita.org/api/v1.2.5 (tanpa enkripsi)",
-    "sources": [
-      {
-        "name": "AnimeLovers",
-        "id": 1,
-        "lang": "id",
-        "baseUrl": "https://animekita.org"
-      }
-    ]
-  },
-  {
+    "baseUrl": "https://animekita.org"
+   }
+  ]
+ },
+ {
+  "name": "Otakudesu",
+  "module": "otakudesu",
+  "pkg": "eu.kanade.tachiyomi.extension.id.otakudesu",
+  "lang": "id",
+  "code": 4,
+  "version": "1.4.3",
+  "nsfw": 0,
+  "sumber": "HTML otakudesu.blog; stream MP4 cdn.odcloud.net",
+  "sources": [
+   {
     "name": "Otakudesu",
-    "module": "otakudesu",
-    "pkg": "eu.kanade.tachiyomi.extension.id.otakudesu",
+    "id": 1,
     "lang": "id",
-    "code": 4,
-    "version": "1.4.3",
-    "nsfw": 0,
-    "sumber": "HTML otakudesu.blog; stream MP4 cdn.odcloud.net",
-    "sources": [
-      {
-        "name": "Otakudesu",
-        "id": 1,
-        "lang": "id",
-        "baseUrl": "https://otakudesu.blog"
-      }
-    ]
-  },
-  {
+    "baseUrl": "https://otakudesu.blog"
+   }
+  ]
+ },
+ {
+  "name": "NontonHentai",
+  "module": "nontonhentai",
+  "pkg": "eu.kanade.tachiyomi.extension.id.nontonhentai",
+  "lang": "id",
+  "code": 5,
+  "version": "1.4.4",
+  "nsfw": 1,
+  "sumber": "WP REST + GDPlayer HLS jv.abplay.store (NSFW) + populer dari blok Trending beranda + filter Genre (42 slug /genres/)",
+  "sources": [
+   {
     "name": "NontonHentai",
-    "module": "nontonhentai",
-    "pkg": "eu.kanade.tachiyomi.extension.id.nontonhentai",
+    "id": 1,
     "lang": "id",
-    "code": 5,
-    "version": "1.4.4",
-    "nsfw": 1,
-    "sumber": "WP REST + GDPlayer HLS jv.abplay.store (NSFW) + populer dari blok Trending beranda + filter Genre (42 slug /genres/)",
-    "sources": [
-      {
-        "name": "NontonHentai",
-        "id": 1,
-        "lang": "id",
-        "baseUrl": "https://nontonhentai.org"
-      }
-    ]
-  },
-  {
+    "baseUrl": "https://nontonhentai.org"
+   }
+  ]
+ },
+ {
+  "name": "HentaiCop",
+  "module": "hentaicop",
+  "pkg": "eu.kanade.tachiyomi.extension.id.hentaicop",
+  "lang": "id",
+  "code": 5,
+  "version": "1.5.1",
+  "nsfw": 1,
+  "sumber": "WP REST + pemutar /play/v/ (HLS CDN jav.*.site / *.my.id) + filter /series/",
+  "sources": [
+   {
     "name": "HentaiCop",
-    "module": "hentaicop",
-    "pkg": "eu.kanade.tachiyomi.extension.id.hentaicop",
+    "id": 1,
     "lang": "id",
-    "code": 4,
-    "version": "1.5.0",
-    "nsfw": 1,
-    "sumber": "WP REST + pemutar /play/v/ (HLS CDN jav.*.site / *.my.id) + filter /series/",
-    "sources": [
-      {
-        "name": "HentaiCop",
-        "id": 1,
-        "lang": "id",
-        "baseUrl": "https://hentaicop.com"
-      }
-    ]
-  },
-  {
+    "baseUrl": "https://hentaicop.com"
+   }
+  ]
+ },
+ {
+  "name": "Anichin",
+  "module": "anichin",
+  "pkg": "eu.kanade.tachiyomi.extension.id.anichin",
+  "lang": "id",
+  "code": 6,
+  "version": "1.4.5",
+  "nsfw": 0,
+  "sumber": "HTML scraping + ok.ru (HLS/MP4) & Streamruby + arsip /anime (order=popular|update|rating) + filter Status/Tipe/Sub/Genre + pesan jelas bila mirror mati",
+  "sources": [
+   {
     "name": "Anichin",
-    "module": "anichin",
-    "pkg": "eu.kanade.tachiyomi.extension.id.anichin",
+    "id": 1,
     "lang": "id",
-    "code": 6,
-    "version": "1.4.5",
-    "nsfw": 0,
-    "sumber": "HTML scraping + ok.ru (HLS/MP4) & Streamruby + arsip /anime (order=popular|update|rating) + filter Status/Tipe/Sub/Genre + pesan jelas bila mirror mati",
-    "sources": [
-      {
-        "name": "Anichin",
-        "id": 1,
-        "lang": "id",
-        "baseUrl": "https://anichin.moe"
-      }
-    ]
-  },
-  {
+    "baseUrl": "https://anichin.moe"
+   }
+  ]
+ },
+ {
+  "name": "Kuramanime",
+  "module": "kuramanime",
+  "pkg": "eu.kanade.tachiyomi.extension.id.kuramanime",
+  "lang": "id",
+  "code": 4,
+  "version": "1.4.3",
+  "nsfw": 0,
+  "sumber": "HTML Kuramanime; alur 3 langkah (CSRF + token halaman + POST authorization) menghasilkan <source> .my.id/kdrive/*.mp4 (HTTP 206, Range) + filter Urutkan (most_viewed/updated/…) & Genre (/properties/genre/<slug>) + cadangan DNS-over-HTTPS",
+  "sources": [
+   {
     "name": "Kuramanime",
-    "module": "kuramanime",
-    "pkg": "eu.kanade.tachiyomi.extension.id.kuramanime",
+    "id": 1,
     "lang": "id",
-    "code": 4,
-    "version": "1.4.3",
-    "nsfw": 0,
-    "sumber": "HTML Kuramanime; alur 3 langkah (CSRF + token halaman + POST authorization) menghasilkan <source> .my.id/kdrive/*.mp4 (HTTP 206, Range) + filter Urutkan (most_viewed/updated/…) & Genre (/properties/genre/<slug>) + cadangan DNS-over-HTTPS",
-    "sources": [
-      {
-        "name": "Kuramanime",
-        "id": 1,
-        "lang": "id",
-        "baseUrl": "https://v20.kuramanime.ing"
-      }
-    ]
-  },
-  {
+    "baseUrl": "https://v20.kuramanime.ing"
+   }
+  ]
+ },
+ {
+  "name": "Cosplaytele",
+  "module": "cosplaytele",
+  "pkg": "eu.kanade.tachiyomi.extension.en.cosplaytele",
+  "lang": "en",
+  "code": 2,
+  "version": "1.4.1",
+  "nsfw": 1,
+  "sumber": "WordPress 7.1.4; katalog /wp-json/wp/v2/posts + populer wordpress-popular-posts; video cossora.stream/embed/<uuid> (AES-CBC kunci 32-hex per video; embed wajib Referer halaman post) + filter Kategori & Tag WordPress (populer difilter lewat taxonomy/term_id)",
+  "sources": [
+   {
     "name": "Cosplaytele",
-    "module": "cosplaytele",
-    "pkg": "eu.kanade.tachiyomi.extension.en.cosplaytele",
+    "id": 1,
     "lang": "en",
-    "code": 2,
-    "version": "1.4.1",
-    "nsfw": 1,
-    "sumber": "WordPress 7.1.4; katalog /wp-json/wp/v2/posts + populer wordpress-popular-posts; video cossora.stream/embed/<uuid> (AES-CBC kunci 32-hex per video; embed wajib Referer halaman post) + filter Kategori & Tag WordPress (populer difilter lewat taxonomy/term_id)",
-    "sources": [
-      {
-        "name": "Cosplaytele",
-        "id": 1,
-        "lang": "en",
-        "baseUrl": "https://cosplaytele.com"
-      }
-    ]
-  },
-  {
+    "baseUrl": "https://cosplaytele.com"
+   }
+  ]
+ },
+ {
+  "name": "Donghive",
+  "module": "donghive",
+  "pkg": "eu.kanade.tachiyomi.extension.id.donghive",
+  "lang": "id",
+  "code": 2,
+  "version": "1.4.1",
+  "nsfw": 0,
+  "sumber": "WordPress 7.1.4 (tema animestream); seri = kategori, episode = post; populer dari sidebar #wpop-items (weekly), terbaru via REST _embed=wp:term, genre /genres/<slug>/; video lewat <select class=mirror> base64 -> ok.ru hlsManifestUrl (Dailymotion 403, MEGA tidak bisa diputar)",
+  "sources": [
+   {
     "name": "Donghive",
-    "module": "donghive",
-    "pkg": "eu.kanade.tachiyomi.extension.id.donghive",
+    "id": 1,
     "lang": "id",
-    "code": 1,
-    "version": "1.4.0",
-    "nsfw": 0,
-    "sumber": "WordPress 7.1.4 (tema animestream); seri = kategori, episode = post; populer dari sidebar #wpop-items (weekly), terbaru via REST _embed=wp:term, genre /genres/<slug>/; video lewat <select class=mirror> base64 -> ok.ru hlsManifestUrl (Dailymotion 403, MEGA tidak bisa diputar)",
-    "sources": [
-      {
-        "name": "Donghive",
-        "id": 1,
-        "lang": "id",
-        "baseUrl": "https://donghive.vip"
-      }
-    ]
-  },
-  {
-    "name": "Dongha",
-    "module": "dongha",
-    "pkg": "eu.kanade.tachiyomi.extension.id.dongha",
-    "lang": "id",
-    "code": 3,
-    "version": "1.4.2",
-    "nsfw": 0,
-    "sumber": "gateway terenkripsi https://gateway.dongha.id (HKDF-SHA256 + ChaCha20-Poly1305); butuh akun (email+sandi di preferensi) untuk login & refresh token; katalog /explore, /latest-episodes, /items/series, episode /items/episodes, video /media/episodes/<id>/sources (MP4 360-1080p, tanpa DRM)"
-  },
-  {
-    "name": "LayarAnime",
-    "module": "layaranime",
-    "pkg": "eu.kanade.tachiyomi.extension.id.layaranime",
-    "lang": "id",
-    "code": 1,
-    "version": "1.4.0",
-    "nsfw": 0,
-    "sumber": "HTML+Jsoup; kartu <article> a[itemprop=url]/meta[itemprop=image]/h2[itemprop=name]; daftar /ongoing & /release (24 kartu), cari /search?q=; episode /<slug>/episode-N -> iframe player.ablink.sbs -> halaman pemutar memuat m3u8 langsung (segmen .pict/MPEG-TS, tanpa Referer)"
-  },
-  {
-    "name": "NontonAnimeID",
-    "module": "nontonanimeid",
-    "pkg": "eu.kanade.tachiyomi.extension.id.nontonanimeid",
-    "lang": "id",
-    "code": 1,
-    "version": "1.4.0",
-    "nsfw": 0,
-    "sumber": "WordPress kotakanime; kartu div.sera; /popular-series/, /ongoing-list/, /?s=; seri /anime/<slug>/ (h1 data-title-default); episode data-post + data-nume/type; POST admin-ajax player_ajax -> iframe -> embed; payload di-XOR (kunci dari skrip) -> /go/dl/?url=k.<hash> -> 302 -> mp4 720p/360p"
-  },
-  {
-    "name": "KaitoAni",
-    "module": "kaitoani",
-    "pkg": "eu.kanade.tachiyomi.extension.id.kaitoani",
-    "lang": "id",
-    "code": 1,
-    "version": "1.4.0",
-    "nsfw": 1,
-    "sumber": "WordPress; kartu article.bs (a[href] + img.ts-post-image); /hentai-list/ + /page/N/, beranda, /?s=; seri /hentai/<slug>/; episode memuat 3 tautan MediaFire (1080/720/480) -> halaman MediaFire -> tautan download*.mediafire.com (uji Range 206 video/mp4). Pemutar situs memakai packer kaomoji (belum diporting)."
-  }
+    "baseUrl": "https://donghive.vip"
+   }
+  ]
+ },
+ {
+  "name": "Dongha",
+  "module": "dongha",
+  "pkg": "eu.kanade.tachiyomi.extension.id.dongha",
+  "lang": "id",
+  "code": 3,
+  "version": "1.4.2",
+  "nsfw": 0,
+  "sumber": "gateway terenkripsi https://gateway.dongha.id (HKDF-SHA256 + ChaCha20-Poly1305); butuh akun (email+sandi di preferensi) untuk login & refresh token; katalog /explore, /latest-episodes, /items/series, episode /items/episodes, video /media/episodes/<id>/sources (MP4 360-1080p, tanpa DRM)"
+ },
+ {
+  "name": "LayarAnime",
+  "module": "layaranime",
+  "pkg": "eu.kanade.tachiyomi.extension.id.layaranime",
+  "lang": "id",
+  "code": 1,
+  "version": "1.4.0",
+  "nsfw": 0,
+  "sumber": "HTML+Jsoup; kartu <article> a[itemprop=url]/meta[itemprop=image]/h2[itemprop=name]; daftar /ongoing & /release (24 kartu), cari /search?q=; episode /<slug>/episode-N -> iframe player.ablink.sbs -> halaman pemutar memuat m3u8 langsung (segmen .pict/MPEG-TS, tanpa Referer)"
+ },
+ {
+  "name": "NontonAnimeID",
+  "module": "nontonanimeid",
+  "pkg": "eu.kanade.tachiyomi.extension.id.nontonanimeid",
+  "lang": "id",
+  "code": 1,
+  "version": "1.4.0",
+  "nsfw": 0,
+  "sumber": "WordPress kotakanime; kartu div.sera; /popular-series/, /ongoing-list/, /?s=; seri /anime/<slug>/ (h1 data-title-default); episode data-post + data-nume/type; POST admin-ajax player_ajax -> iframe -> embed; payload di-XOR (kunci dari skrip) -> /go/dl/?url=k.<hash> -> 302 -> mp4 720p/360p"
+ },
+ {
+  "name": "KaitoAni",
+  "module": "kaitoani",
+  "pkg": "eu.kanade.tachiyomi.extension.id.kaitoani",
+  "lang": "id",
+  "code": 2,
+  "version": "1.4.1",
+  "nsfw": 1,
+  "sumber": "WordPress; kartu article.bs (a[href] + img.ts-post-image); /hentai-list/ + /page/N/, beranda, /?s=; seri /hentai/<slug>/; episode memuat 3 tautan MediaFire (1080/720/480) -> halaman MediaFire -> tautan download*.mediafire.com (uji Range 206 video/mp4). Pemutar situs memakai packer kaomoji (belum diporting)."
+ }
 ]

@@ -78,13 +78,19 @@ class Kaitoani : HttpSource() {
 
     /** Poster sering memakai host gambar WordPress (i0/i3.wp.com); dipakai apa adanya. */
     private fun keManga(article: Element): SManga? {
-        val a = article.selectFirst("a[href]") ?: return null
+        // Halaman hasil cari memakai tema lain: kartunya adalah <a class="series"> itu sendiri,
+        // bukan wadah <article>/<div> seperti di beranda & daftar. Tangani dua bentuk.
+        val a = if (article.tagName().equals("a", true)) {
+            article
+        } else {
+            article.selectFirst("a[href]") ?: return null
+        }
         val href = a.attr("href").takeIf { it.isNotBlank() } ?: return null
-        val img = article.selectFirst("img")
+        val img = a.selectFirst("img")
 
         val judul = a.attr("title").takeIf { it.isNotBlank() }
             ?: img?.attr("alt")?.takeIf { it.isNotBlank() }
-            ?: article.selectFirst("h2, .tt, .title")?.text()?.takeIf { it.isNotBlank() }
+            ?: a.selectFirst("h2, .tt, .title")?.text()?.takeIf { it.isNotBlank() }
             ?: return null
 
         val src = img?.attr("data-src")?.takeIf { it.isNotBlank() && !it.startsWith("data:") }
@@ -99,7 +105,7 @@ class Kaitoani : HttpSource() {
 
     private fun daftar(path: String, rujuk: String = "$baseUrl/"): MangasPage {
         val doc = dokumen(path, rujuk)
-        var kartu = doc.select("article.bs").mapNotNull { keManga(it) }
+        var kartu = doc.select("article.bs, a.series[href]").mapNotNull { keManga(it) }
         if (kartu.isEmpty()) {
             kartu = doc.select("article, .bsx, .listupd .bs").mapNotNull { keManga(it) }
         }
@@ -121,7 +127,12 @@ class Kaitoani : HttpSource() {
     override fun fetchSearchManga(page: Int, query: String, filters: FilterList): Observable<MangasPage> =
         Observable.fromCallable {
             val q = java.net.URLEncoder.encode(query.trim(), "UTF-8")
-            if (page <= 1) daftar("/?s=$q") else daftar("/page/$page/?s=$q")
+            // Situs ini TIDAK memaginasi hasil pencarian: `/page/N/?s=` balas 404 dan
+            // `?s=...&page=N` mengembalikan halaman 1 apa adanya. Jadi hanya halaman 1 yang
+            // diambil, dan hasNext selalu false supaya aplikasi tidak meminta halaman 2 (404).
+            if (page > 1) return@fromCallable MangasPage(emptyList(), false)
+            val hasil = daftar("/?s=$q")
+            MangasPage(hasil.mangas, false)
         }.subscribeOn(Schedulers.io())
 
     // --- Detail --------------------------------------------------------------
