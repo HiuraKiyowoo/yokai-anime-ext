@@ -51,7 +51,19 @@ class Samehadaku : HttpSource() {
         }
         .build()
 
+    /**
+     * `headersBuilder()` ikut diteruskan aplikasi ke PEMUTAR VIDEO (`KUNCI_HEADER`), jadi
+     * User-Agent di sini yang menentukan CDN melayani atau menolak.
+     *
+     * Terukur pada berkas `googlevideo.com/videoplayback` situs ini:
+     *   UA browser desktop (nilai [UA]) → **206 video/mp4**
+     *   UA pemutar bawaan app (SM-A125F) → **403**, `okhttp/4.12.0` → **403**,
+     *   `ExoPlayerLib/1.5.1` → **403**.
+     * Karena itu UA browser ditulis eksplisit di sini; Referer situs aman (206) dan tetap
+     * dipasang karena host gambar situs menolak hotlink tanpa itu.
+     */
     override fun headersBuilder() = super.headersBuilder()
+        .add("User-Agent", UA)
         .add("Referer", "$baseUrl/")
 
     // --- Pembantu ------------------------------------------------------------

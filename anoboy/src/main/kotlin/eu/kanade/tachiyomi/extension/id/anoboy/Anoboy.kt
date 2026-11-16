@@ -51,8 +51,17 @@ class Anoboy : HttpSource() {
         }
         .build()
 
+    /**
+     * PENTING: JANGAN menaruh `Referer` di sini.
+     *
+     * `headersBuilder()` ikut diteruskan aplikasi ke PEMUTAR VIDEO. CDN pemutar di situs ini
+     * (`vkcdn5.com`) membalas **403** kalau Referer-nya halaman situs
+     * (terukur: Referer `https://anoboy.be/` → 403, tanpa Referer → 206 video/mp4),
+     * jadi satu baris Referer di sini membuat semua episode gagal diputar.
+     * Referer untuk kebutuhan internal modul dipasang per-permintaan di [minta].
+     */
     override fun headersBuilder() = super.headersBuilder()
-        .add("Referer", "$baseUrl/")
+        .add("User-Agent", UA)
 
     // --- Pembantu ------------------------------------------------------------
 
