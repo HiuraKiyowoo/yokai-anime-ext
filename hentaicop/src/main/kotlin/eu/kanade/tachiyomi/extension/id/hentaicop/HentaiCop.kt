@@ -136,6 +136,7 @@ class HentaiCop : HttpSource() {
                 Pilih("Studio", "studio", opsi(o, "studio")),
                 Pilih("Tipe", "type", opsi(o, "type")),
                 Pilih("Sensor", "sensor", opsi(o, "sensor")),
+                Pilih("Sub", "sub", opsi(o, "sub")),
                 Pilih("Status", "status", opsi(o, "status")),
                 Pilih("Tahun", "tahun", opsi(o, "tahun")),
                 Pilih("Urutkan", "order", urut),

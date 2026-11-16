@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.extension.id.kaitoani
 
+import eu.kanade.tachiyomi.source.model.Filter
 import eu.kanade.tachiyomi.source.model.FilterList
 import eu.kanade.tachiyomi.source.model.MangasPage
 import eu.kanade.tachiyomi.source.model.Page
@@ -127,6 +128,14 @@ class Kaitoani : HttpSource() {
     override fun fetchSearchManga(page: Int, query: String, filters: FilterList): Observable<MangasPage> =
         Observable.fromCallable {
             val q = java.net.URLEncoder.encode(query.trim(), "UTF-8")
+            val pilih = filters.filterIsInstance<Pilih>().firstOrNull { it.slug.isNotBlank() }
+            // Tanpa kata kunci + ada genre/studio/season: pakai arsip taksonominya sendiri.
+            // Arsip ini TIDAK punya halaman 2 (`/genres/<slug>/page/2/` → 404), jadi hasNext false.
+            if (q.isBlank() && pilih != null) {
+                if (page > 1) return@fromCallable MangasPage(emptyList(), false)
+                val hasil = daftar("/${pilih.jenis}/${pilih.slug}/")
+                return@fromCallable MangasPage(hasil.mangas, false)
+            }
             // Situs ini TIDAK memaginasi hasil pencarian: `/page/N/?s=` balas 404 dan
             // `?s=...&page=N` mengembalikan halaman 1 apa adanya. Jadi hanya halaman 1 yang
             // diambil, dan hasNext selalu false supaya aplikasi tidak meminta halaman 2 (404).
@@ -221,11 +230,53 @@ class Kaitoani : HttpSource() {
             .mapIndexed { i, (_, berkas) -> Page(i, berkas) }
     }.subscribeOn(Schedulers.io())
 
-    override fun getFilterList(): FilterList = FilterList(
-        eu.kanade.tachiyomi.source.model.Filter.Header(
-            "Cari lewat kotak pencarian. \"Populer\" memakai halaman daftar, \"Terbaru\" memakai beranda.",
-        ),
-    )
+    /**
+     * Opsi arsip taksonomi (`/genres/`, `/studio/`, `/season/`), di-cache 6 jam.
+     * Kalau satu arsip gagal dibaca, dropdown-nya saja yang tidak muncul — panel filter
+     * jangan pernah kosong melompong.
+     */
+    private fun opsiArsip(jenis: String): List<Pair<String, String>> {
+        val sekarang = System.currentTimeMillis()
+        kueArsip[jenis]?.let { if (sekarang - waktuArsip < 6 * 3600_000L) return it }
+        val hasil = runCatching {
+            val doc = dokumen("/$jenis/")
+            doc.select("a[href*=\"/$jenis/\"]").mapNotNull { a ->
+                val href = a.absUrl("href").ifBlank { a.attr("href") }
+                val slug = href.trimEnd('/').substringAfterLast('/')
+                val label = a.text().trim()
+                if (slug.isBlank() || label.isBlank()) null else slug to label
+            }.distinctBy { it.first }
+        }.getOrDefault(emptyList())
+        if (hasil.isNotEmpty()) {
+            kueArsip[jenis] = hasil
+            waktuArsip = sekarang
+        }
+        return hasil
+    }
+
+    override fun getFilterList(): FilterList {
+        val daftar = mutableListOf<Filter<*>>()
+        for ((jenis, nama) in listOf("genres" to "Genre", "studio" to "Studio", "season" to "Season")) {
+            val opsi = opsiArsip(jenis)
+            if (opsi.isNotEmpty()) daftar += Pilih(nama, jenis, listOf("" to "Semua") + opsi)
+        }
+        if (daftar.isEmpty()) {
+            daftar += Filter.Header("Cari lewat kotak pencarian. Arsip genre/studio/season belum terbaca.")
+        }
+        return FilterList(daftar)
+    }
+
+    private val kueArsip = HashMap<String, List<Pair<String, String>>>()
+    private var waktuArsip = 0L
+
+    /** Satu dropdown = satu arsip taksonomi (`/genres/<slug>/`, `/studio/<slug>/`, `/season/<slug>/`). */
+    private class Pilih(
+        nama: String,
+        val jenis: String,
+        private val pasangan: List<Pair<String, String>>,
+    ) : Filter.Select<String>(nama, pasangan.map { it.second }.toTypedArray(), 0) {
+        val slug: String get() = pasangan.getOrNull(state)?.first.orEmpty()
+    }
 
     companion object {
         private const val UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +

@@ -94,8 +94,8 @@
   "module": "hentaicop",
   "pkg": "eu.kanade.tachiyomi.extension.id.hentaicop",
   "lang": "id",
-  "code": 5,
-  "version": "1.5.1",
+  "code": 6,
+  "version": "1.5.2",
   "nsfw": 1,
   "sumber": "WP REST + pemutar /play/v/ (HLS CDN jav.*.site / *.my.id) + filter /series/",
   "sources": [
@@ -238,8 +238,8 @@
   "module": "kaitoani",
   "pkg": "eu.kanade.tachiyomi.extension.id.kaitoani",
   "lang": "id",
-  "code": 2,
-  "version": "1.4.1",
+  "code": 3,
+  "version": "1.4.2",
   "nsfw": 1,
   "sumber": "WordPress; kartu article.bs (a[href] + img.ts-post-image); /hentai-list/ + /page/N/, beranda, /?s=; seri /hentai/<slug>/; episode memuat 3 tautan MediaFire (1080/720/480) -> halaman MediaFire -> tautan download*.mediafire.com (uji Range 206 video/mp4). Pemutar situs memakai packer kaomoji (belum diporting).",
   "sources": [
